@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import HomePage from "./pages/HomePage";
 import StockChart from "./components/StockChart";
 import StockIndicators from "./components/StockIndicators";
-
+import StockComparison from "./components/StockComparison";
 import {
   stocks,
   type Periodo,
@@ -139,6 +139,8 @@ function App() {
           <>
             <StockIndicators dados={dados} />
             <StockChart dados={dados} />
+            <StockComparison periodo={periodo} />
+
           </>
         )}
 
