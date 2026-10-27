@@ -1,26 +1,59 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import HomePage from "./pages/HomePage";
 import StockChart from "./components/StockChart";
 import StockIndicators from "./components/StockIndicators";
+
 import {
   stocks,
-  gerarHistorico,
   type Periodo,
+  type StockPoint,
 } from "./data/stocks";
+
+import { buscarHistoricoAcao } from "./services/stockService";
 
 function App() {
   const [acao, setAcao] = useState("PETR4");
   const [periodo, setPeriodo] = useState<Periodo>(7);
 
-  const acaoSelecionada = stocks[acao];
+  const [dados, setDados] = useState<StockPoint[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
 
-  const precoInicial = acaoSelecionada.dados[0].preco;
+  useEffect(() => {
+    let ativo = true;
 
-  const dadosFiltrados = gerarHistorico(
-    precoInicial,
-    periodo
-  );
+    async function carregarDados() {
+      setCarregando(true);
+      setErro("");
+
+      try {
+        const resultado = await buscarHistoricoAcao(
+          acao,
+          periodo
+        );
+
+        if (ativo) {
+          setDados(resultado);
+        }
+      } catch {
+        if (ativo) {
+          setErro("Não foi possível carregar os dados.");
+          setDados([]);
+        }
+      } finally {
+        if (ativo) {
+          setCarregando(false);
+        }
+      }
+    }
+
+    carregarDados();
+
+    return () => {
+      ativo = false;
+    };
+  }, [acao, periodo]);
 
   return (
     <>
@@ -96,9 +129,22 @@ function App() {
           )}
         </div>
 
-        <StockIndicators dados={dadosFiltrados} />
+        {carregando ? (
+          <p>Carregando dados financeiros...</p>
+        ) : erro ? (
+          <p style={{ color: "#dc2626" }}>
+            {erro}
+          </p>
+        ) : (
+          <>
+            <StockIndicators dados={dados} />
+            <StockChart dados={dados} />
+          </>
+        )}
 
-        <StockChart dados={dadosFiltrados} />
+        <p style={{ color: "#64748b", fontSize: "12px" }}>
+          Dados simulados para fins acadêmicos.
+        </p>
       </section>
     </>
   );
