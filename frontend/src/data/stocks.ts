@@ -41,3 +41,36 @@ export const stocks: Record<string, Stock> = {
     ],
   },
 };
+
+
+
+export type Periodo = 7 | 30 | 90;
+
+export function gerarHistorico(
+  precoInicial: number,
+  periodo: Periodo
+): StockPoint[] {
+  const dados: StockPoint[] = [];
+
+  for (let i = 0; i < periodo; i++) {
+    const data = new Date(2026, 9, 26);
+    data.setDate(data.getDate() - (periodo - 1 - i));
+
+    const oscilacao =
+      Math.sin(i * 0.4) * 1.5 + i * 0.03;
+
+    const preco = Number(
+      (precoInicial + oscilacao).toFixed(2)
+    );
+
+    dados.push({
+      dia: data.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+      }),
+      preco,
+    });
+  }
+
+  return dados;
+}
