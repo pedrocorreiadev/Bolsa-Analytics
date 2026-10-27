@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import {
   LineChart,
   Line,
@@ -23,44 +24,80 @@ type StockComparisonProps = {
 export default function StockComparison({
   periodo,
 }: StockComparisonProps) {
-  const petrobras = gerarHistorico(
-    stocks.PETR4.dados[0].preco,
+  const [acao1, setAcao1] = useState("PETR4");
+  const [acao2, setAcao2] = useState("VALE3");
+
+  const codigos = Object.keys(stocks);
+
+  const historico1 = gerarHistorico(
+    stocks[acao1].dados[0].preco,
     periodo
   );
 
-  const vale = gerarHistorico(
-    stocks.VALE3.dados[0].preco,
+  const historico2 = gerarHistorico(
+    stocks[acao2].dados[0].preco,
     periodo
   );
 
-  const dadosComparacao = petrobras.map(
+  const dadosComparacao = historico1.map(
     (item, index) => ({
       dia: item.dia,
-      PETR4: Number(
-        (
-          (item.preco / petrobras[0].preco) *
-          100
-        ).toFixed(2)
+      primeira: Number(
+        ((item.preco / historico1[0].preco) * 100).toFixed(2)
       ),
-      VALE3: Number(
-        (
-          (vale[index].preco / vale[0].preco) *
-          100
-        ).toFixed(2)
+      segunda: Number(
+        ((historico2[index].preco / historico2[0].preco) * 100).toFixed(2)
       ),
     })
   );
 
   return (
-    <div style={{ marginTop: "40px" }}>
+    <section style={{ marginTop: "40px" }}>
       <h2>Comparação entre ações</h2>
 
-      <p>
-        Petrobras (PETR4) x Vale (VALE3)
-      </p>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "16px",
+          margin: "20px 0",
+        }}
+      >
+        <div>
+          <label htmlFor="acao1">Primeira ação</label>
+          <select
+            id="acao1"
+            value={acao1}
+            onChange={(e) => setAcao1(e.target.value)}
+            style={{ display: "block", padding: "10px" }}
+          >
+            {codigos.map((codigo) => (
+              <option key={codigo} value={codigo}>
+                {codigo}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="acao2">Segunda ação</label>
+          <select
+            id="acao2"
+            value={acao2}
+            onChange={(e) => setAcao2(e.target.value)}
+            style={{ display: "block", padding: "10px" }}
+          >
+            {codigos.map((codigo) => (
+              <option key={codigo} value={codigo}>
+                {codigo}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <p style={{ fontSize: "12px", color: "#64748b" }}>
-        Desempenho relativo, base 100.
+        Comparação de desempenho relativo (base 100).
         Dados simulados.
       </p>
 
@@ -71,11 +108,15 @@ export default function StockComparison({
             <XAxis dataKey="dia" />
             <YAxis domain={["auto", "auto"]} />
             <Tooltip />
-            <Legend />
+            <Legend
+              formatter={(value) =>
+                value === "primeira" ? acao1 : acao2
+              }
+            />
 
             <Line
               type="monotone"
-              dataKey="PETR4"
+              dataKey="primeira"
               stroke="#2563eb"
               strokeWidth={3}
               dot={false}
@@ -83,7 +124,7 @@ export default function StockComparison({
 
             <Line
               type="monotone"
-              dataKey="VALE3"
+              dataKey="segunda"
               stroke="#16a34a"
               strokeWidth={3}
               dot={false}
@@ -91,6 +132,6 @@ export default function StockComparison({
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </section>
   );
 }
