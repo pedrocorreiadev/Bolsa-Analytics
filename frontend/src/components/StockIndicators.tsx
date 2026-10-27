@@ -13,6 +13,7 @@ export default function StockIndicators({
   }
 
   const precos = dados.map((item) => item.preco);
+
   const precoAtual = precos[precos.length - 1];
   const precoInicial = precos[0];
 
@@ -34,7 +35,7 @@ export default function StockIndicators({
     },
     {
       titulo: "Variação no período",
-      valor: `${variacao >= 0 ? "+" : ""}${variacao.toFixed(2)}%`,
+      valor: `${variacao >= 0 ? "▲ +" : "▼ "}${variacao.toFixed(2)}%`,
     },
     {
       titulo: "Maior preço",
@@ -69,7 +70,17 @@ export default function StockIndicators({
           <p style={{ color: "#64748b", margin: 0 }}>
             {item.titulo}
           </p>
-          <h2 style={{ color: "#0f172a" }}>
+
+          <h2
+            style={{
+              color:
+                item.titulo === "Variação no período"
+                  ? variacao >= 0
+                    ? "#16a34a"
+                    : "#dc2626"
+                  : "#0f172a",
+            }}
+          >
             {item.valor}
           </h2>
         </div>
