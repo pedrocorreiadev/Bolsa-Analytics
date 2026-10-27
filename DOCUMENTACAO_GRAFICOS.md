@@ -124,3 +124,55 @@ Entre as melhorias previstas estão a integração com cotações reais, o aperf
 O desenvolvimento dos gráficos e indicadores do Bolsa Analytics permitiu aplicar conhecimentos de programação frontend, componentização, tipagem, visualização de dados e controle de versões.
 
 As funcionalidades implementadas contribuem para a construção de uma plataforma financeira interativa e estabelecem uma base para a integração com o backend e a evolução do projeto acadêmico.
+
+## 11. Requisitos Funcionais
+
+| Código | Requisito | Situação |
+|---|---|---|
+| RF01 | Exibir gráfico de evolução dos preços das ações | Implementado |
+| RF02 | Apresentar preço atual, variação, máxima e mínima | Implementado |
+| RF03 | Permitir seleção de ações PETR4, VALE3 e ITUB4 | Implementado |
+| RF04 | Permitir filtragem por 7, 30 e 90 dias | Implementado |
+| RF05 | Indicar valorização e desvalorização por cores e símbolos | Implementado |
+| RF06 | Permitir comparação entre duas ações selecionadas | Implementado |
+| RF07 | Exibir mensagens de carregamento e erro | Implementado |
+| RF08 | Consultar dados reais por meio da API Python | Pendente |
+
+## 12. Requisitos Não Funcionais
+
+| Código | Requisito | Descrição |
+|---|---|---|
+| RNF01 | Usabilidade | A interface deve permitir a navegação e a interpretação dos dados de forma simples. |
+| RNF02 | Responsividade | Os gráficos e indicadores devem se adaptar a diferentes tamanhos de tela. |
+| RNF03 | Desempenho | A aplicação deve apresentar os gráficos com tempo de resposta adequado. |
+| RNF04 | Manutenibilidade | O código deve ser organizado em componentes reutilizáveis. |
+| RNF05 | Compatibilidade | A plataforma deve funcionar em navegadores modernos. |
+| RNF06 | Confiabilidade | O sistema deve informar erros durante o carregamento dos dados. |
+| RNF07 | Escalabilidade | A estrutura deve permitir a inclusão de novas ações e funcionalidades. |
+| RNF08 | Integridade dos dados | Os valores exibidos devem corresponder aos dados fornecidos pelo serviço financeiro. |
+
+## 13. Casos de Teste
+
+| Código | Funcionalidade | Procedimento | Resultado esperado |
+|---|---|---|---|
+| CT01 | Seleção de ações | Selecionar PETR4, VALE3 e ITUB4 | Atualizar gráficos e indicadores |
+| CT02 | Filtro de período | Alternar entre 7, 30 e 90 dias | Atualizar os dados apresentados |
+| CT03 | Indicadores financeiros | Selecionar uma ação | Recalcular preço atual, variação, máxima e mínima |
+| CT04 | Gráfico interativo | Posicionar o cursor sobre o gráfico | Exibir informações do ponto selecionado |
+| CT05 | Comparação de ações | Selecionar duas empresas diferentes | Exibir duas séries no gráfico |
+| CT06 | Tendência financeira | Utilizar dados com variação positiva ou negativa | Exibir a cor e a seta correspondentes |
+| CT07 | Tratamento de erros | Simular falha no serviço financeiro | Exibir mensagem de erro |
+| CT08 | Compilação | Executar npm.cmd run build | Concluir a compilação sem erros |
+
+### 13.1. Validação
+
+Os testes funcionais CT01 a CT05 foram realizados
+manualmente durante o desenvolvimento.
+
+A compilação CT08 foi concluída com sucesso.
+
+Os testes CT06 e CT07 ainda precisam de validação
+específica para os cenários de queda e falha do serviço.
+
+Os testes de integração com dados reais serão realizados
+após a disponibilização da API Python.
