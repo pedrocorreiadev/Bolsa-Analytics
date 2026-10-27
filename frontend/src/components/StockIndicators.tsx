@@ -1,14 +1,25 @@
 
-const precos = [28.5, 29.1, 28.8, 30.4, 31.2];
+import type { StockPoint } from "../data/stocks";
 
-export default function StockIndicators() {
+type StockIndicatorsProps = {
+  dados: StockPoint[];
+};
+
+export default function StockIndicators({
+  dados,
+}: StockIndicatorsProps) {
+  if (dados.length === 0) {
+    return <p>Nenhum dado disponível.</p>;
+  }
+
+  const precos = dados.map((item) => item.preco);
   const precoAtual = precos[precos.length - 1];
   const precoInicial = precos[0];
-  const variacao =
-    ((precoAtual - precoInicial) / precoInicial) * 100;
 
-  const maiorPreco = Math.max(...precos);
-  const menorPreco = Math.min(...precos);
+  const variacao =
+    precoInicial !== 0
+      ? ((precoAtual - precoInicial) / precoInicial) * 100
+      : 0;
 
   const formatarMoeda = (valor: number) =>
     valor.toLocaleString("pt-BR", {
@@ -27,11 +38,11 @@ export default function StockIndicators() {
     },
     {
       titulo: "Maior preço",
-      valor: formatarMoeda(maiorPreco),
+      valor: formatarMoeda(Math.max(...precos)),
     },
     {
       titulo: "Menor preço",
-      valor: formatarMoeda(menorPreco),
+      valor: formatarMoeda(Math.min(...precos)),
     },
   ];
 
@@ -53,7 +64,6 @@ export default function StockIndicators() {
             padding: "20px",
             borderRadius: "12px",
             border: "1px solid #e2e8f0",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
           }}
         >
           <p style={{ color: "#64748b", margin: 0 }}>

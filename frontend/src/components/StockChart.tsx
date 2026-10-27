@@ -9,17 +9,17 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const dados = [
-  { dia: "Seg", preco: 28.5 },
-  { dia: "Ter", preco: 29.1 },
-  { dia: "Qua", preco: 28.8 },
-  { dia: "Qui", preco: 30.4 },
-  { dia: "Sex", preco: 31.2 },
-];
+import type { StockPoint } from "../data/stocks";
 
-export default function StockChart() {
+type StockChartProps = {
+  dados: StockPoint[];
+};
+
+export default function StockChart({
+  dados,
+}: StockChartProps) {
   return (
-    <div style={{ width: "100%", maxWidth: 700 }}>
+    <div style={{ width: "100%" }}>
       <h2>Evolução do preço da ação</h2>
       <p>Dados fictícios para demonstração</p>
 
@@ -38,7 +38,7 @@ export default function StockChart() {
             <Line
               type="monotone"
               dataKey="preco"
-              stroke="#2563eb"
+              stroke="#059669"
               strokeWidth={3}
             />
           </LineChart>
