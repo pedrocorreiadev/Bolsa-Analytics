@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 
 import {
@@ -39,6 +40,34 @@ export default function StockComparison({
     periodo
   );
 
+  const calcularVariacao = (precos: number[]) => {
+    const inicial = precos[0];
+    const final = precos[precos.length - 1];
+
+    return inicial !== 0
+      ? ((final - inicial) / inicial) * 100
+      : 0;
+  };
+
+  const variacao1 = calcularVariacao(
+    historico1.map((item) => item.preco)
+  );
+
+  const variacao2 = calcularVariacao(
+    historico2.map((item) => item.preco)
+  );
+
+  const diferenca = Math.abs(variacao1 - variacao2);
+
+  const mesmaAcao = acao1 === acao2;
+
+  const melhorAcao =
+    mesmaAcao || Math.abs(variacao1 - variacao2) < 0.000001
+      ? "Empate"
+      : variacao1 > variacao2
+        ? acao1
+        : acao2;
+
   const dadosComparacao = historico1.map(
     (item, index) => ({
       dia: item.dia,
@@ -46,10 +75,14 @@ export default function StockComparison({
         ((item.preco / historico1[0].preco) * 100).toFixed(2)
       ),
       segunda: Number(
-        ((historico2[index].preco / historico2[0].preco) * 100).toFixed(2)
+        ((historico2[index].preco /
+          historico2[0].preco) * 100).toFixed(2)
       ),
     })
   );
+
+  const formatarPercentual = (valor: number) =>
+    `${valor >= 0 ? "+" : ""}${valor.toFixed(2)}%`;
 
   return (
     <section style={{ marginTop: "40px" }}>
@@ -73,7 +106,7 @@ export default function StockComparison({
           >
             {codigos.map((codigo) => (
               <option key={codigo} value={codigo}>
-                {codigo}
+                {codigo} - {stocks[codigo].nome}
               </option>
             ))}
           </select>
@@ -89,16 +122,66 @@ export default function StockComparison({
           >
             {codigos.map((codigo) => (
               <option key={codigo} value={codigo}>
-                {codigo}
+                {codigo} - {stocks[codigo].nome}
               </option>
             ))}
           </select>
         </div>
       </div>
 
+      {mesmaAcao && (
+        <p style={{ color: "#b45309" }}>
+          Selecione ações diferentes para comparar empresas.
+        </p>
+      )}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "12px",
+          marginBottom: "24px",
+        }}
+      >
+        {[
+          {
+            titulo: `Variação ${acao1}`,
+            valor: formatarPercentual(variacao1),
+          },
+          {
+            titulo: `Variação ${acao2}`,
+            valor: formatarPercentual(variacao2),
+          },
+          {
+            titulo: "Melhor desempenho",
+            valor: melhorAcao,
+          },
+          {
+            titulo: "Diferença de desempenho",
+            valor: `${diferenca.toFixed(2)} p.p.`,
+          },
+        ].map((indicador) => (
+          <div
+            key={indicador.titulo}
+            style={{
+              padding: "18px",
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              background: "#ffffff",
+            }}
+          >
+            <p style={{ color: "#64748b" }}>
+              {indicador.titulo}
+            </p>
+            <h3>{indicador.valor}</h3>
+          </div>
+        ))}
+      </div>
+
       <p style={{ fontSize: "12px", color: "#64748b" }}>
         Comparação de desempenho relativo (base 100).
-        Dados simulados.
+        Dados simulados para fins acadêmicos.
       </p>
 
       <div style={{ width: "100%", height: 320 }}>
@@ -107,13 +190,22 @@ export default function StockComparison({
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="dia" />
             <YAxis domain={["auto", "auto"]} />
-            <Tooltip />
+            <Tooltip
+              formatter={(valor, nome) => [
+                Number(valor).toFixed(2),
+                nome === "primeira" ? acao1 : acao2,
+              ]}
+            />
             <Legend
               formatter={(value) =>
                 value === "primeira" ? acao1 : acao2
               }
             />
-
+            <ReferenceLine
+              y={100}
+              stroke="#94a3b8"
+              strokeDasharray="5 5"
+            />
             <Line
               type="monotone"
               dataKey="primeira"
@@ -121,7 +213,6 @@ export default function StockComparison({
               strokeWidth={3}
               dot={false}
             />
-
             <Line
               type="monotone"
               dataKey="segunda"
