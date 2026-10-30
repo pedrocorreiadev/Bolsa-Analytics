@@ -6,7 +6,7 @@ O Bolsa Analytics é uma aplicação acadêmica organizada em um único reposit�
 
 - **Backend:** FastAPI com `GET /health`, CORS para desenvolvimento local e diretórios reservados para as próximas camadas.
 - **Frontend:** React, TypeScript e Vite, com Tailwind CSS e uma página inicial temporária.
-- **Dependências futuras já declaradas:** Pandas e yfinance no backend; Recharts e Lucide React no frontend. A declaração dessas bibliotecas não significa que consultas, gráficos ou ícones já estejam implementados.
+- **Bibliotecas e recursos:** Pandas e yfinance no backend; Recharts no frontend. Os ícones do frontend são SVGs locais do Phosphor, sob licença MIT, com os avisos em `THIRD_PARTY_NOTICES.md`.
 - **Persistência:** não há banco de dados nem cache funcional.
 - **Acesso:** não há autenticação ou tela de login.
 

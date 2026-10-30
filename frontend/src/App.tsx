@@ -1,155 +1,57 @@
-
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, type FormEvent } from "react";
+import { Icon, type IconName } from "./components/Icon";
+import { AppLink, navigate, useRoute } from "./router";
+import { MarketOverviewProvider } from "./components/MarketOverviewProvider";
 import HomePage from "./pages/HomePage";
-import StockChart from "./components/StockChart";
-import StockIndicators from "./components/StockIndicators";
-import StockComparison from "./components/StockComparison";
-import {
-  stocks,
-  type Periodo,
-  type StockPoint,
-} from "./data/stocks";
+import MarketPage from "./pages/MarketPage";
+import "./styles/terminal.css";
 
-import { buscarHistoricoAcao } from "./services/stockService";
+const ChartsPage = lazy(() => import("./pages/ChartsPage"));
+const CandlesPage = lazy(() => import("./pages/CandlesPage"));
+const ComparisonPage = lazy(() => import("./pages/ComparisonPage"));
+const pages: { path: string; label: string; icon: IconName; detail: string; code: string }[] = [
+  { path: "/", label: "Visão geral", icon: "chart", detail: "Panorama dos ativos e dos últimos históricos disponíveis.", code: "01" },
+  { path: "/mercado", label: "Mercado", icon: "history", detail: "Explore, filtre e ordene os ativos atendidos pela fonte.", code: "02" },
+  { path: "/graficos", label: "Gráficos", icon: "chart", detail: "Evolução de preços, estatísticas e laboratório acadêmico.", code: "03" },
+  { path: "/candles", label: "Candles", icon: "chart", detail: "Histórico OHLCV, volume e navegação por período.", code: "04" },
+  { path: "/comparacao", label: "Comparação", icon: "compare", detail: "Preços, variações e desempenho relativo de dois ativos.", code: "05" },
+];
 
-function App() {
-  const [acao, setAcao] = useState("PETR4");
-  const [periodo, setPeriodo] = useState<Periodo>(7);
-
-  const [dados, setDados] = useState<StockPoint[]>([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
-
+function Clock() {
+  const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    let ativo = true;
-
-    async function carregarDados() {
-      setCarregando(true);
-      setErro("");
-
-      try {
-        const resultado = await buscarHistoricoAcao(
-          acao,
-          periodo
-        );
-
-        if (ativo) {
-          setDados(resultado);
-        }
-      } catch {
-        if (ativo) {
-          setErro("Não foi possível carregar os dados.");
-          setDados([]);
-        }
-      } finally {
-        if (ativo) {
-          setCarregando(false);
-        }
-      }
-    }
-
-    carregarDados();
-
-    return () => {
-      ativo = false;
-    };
-  }, [acao, periodo]);
-
-  return (
-    <>
-      <HomePage />
-
-      <section
-        style={{
-          padding: "30px",
-          maxWidth: "900px",
-          margin: "0 auto",
-        }}
-      >
-        <h2>Análise de ações</h2>
-
-        <label htmlFor="acao">
-          Selecione uma ação:
-        </label>
-
-        <select
-          id="acao"
-          value={acao}
-          onChange={(event) =>
-            setAcao(event.target.value)
-          }
-          style={{
-            display: "block",
-            padding: "10px",
-            margin: "12px 0 24px",
-            borderRadius: "8px",
-            border: "1px solid #cbd5e1",
-          }}
-        >
-          {Object.keys(stocks).map((codigo) => (
-            <option key={codigo} value={codigo}>
-              {codigo} - {stocks[codigo].nome}
-            </option>
-          ))}
-        </select>
-
-        <h3>Período de análise</h3>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginBottom: "24px",
-          }}
-        >
-          {([7, 30, 90] as Periodo[]).map(
-            (dias) => (
-              <button
-                key={dias}
-                type="button"
-                onClick={() => setPeriodo(dias)}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  border: "1px solid #cbd5e1",
-                  background:
-                    periodo === dias
-                      ? "#2563eb"
-                      : "#ffffff",
-                  color:
-                    periodo === dias
-                      ? "#ffffff"
-                      : "#0f172a",
-                }}
-              >
-                {dias} dias
-              </button>
-            )
-          )}
-        </div>
-
-        {carregando ? (
-          <p>Carregando dados financeiros...</p>
-        ) : erro ? (
-          <p style={{ color: "#dc2626" }}>
-            {erro}
-          </p>
-        ) : (
-          <>
-            <StockIndicators dados={dados} />
-            <StockChart dados={dados} />
-            <StockComparison periodo={periodo} />
-
-          </>
-        )}
-
-        <p style={{ color: "#64748b", fontSize: "12px" }}>
-          Dados simulados para fins acadêmicos.
-        </p>
-      </section>
-    </>
-  );
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return <span className="terminal-clock">Rio Branco <time className="mono" dateTime={now.toISOString()}>{now.toLocaleTimeString("pt-BR", { timeZone: "America/Rio_Branco", hour: "2-digit", minute: "2-digit" })}</time></span>;
 }
 
-export default App;
+function Terminal() {
+  const { pathname } = useRoute();
+  const current = pages.find((page) => page.path === pathname);
+  const [collapsed, setCollapsed] = useState(false);
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    document.title = `${current?.label ?? "Página não encontrada"} · Bolsa Analytics`;
+    document.getElementById("main-content")?.focus({ preventScroll: true });
+  }, [pathname, current?.label]);
+  function search(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    navigate(`/mercado${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ""}`);
+  }
+
+  return <div className={`terminal-app terminal-v2 ${collapsed ? "nav-collapsed" : ""}`}>
+    <a href="#main-content" className="skip-link">Ir para o conteúdo</a>
+    <header className="terminal-topbar"><AppLink href="/" className="terminal-wordmark" aria-label="Bolsa Analytics, início">BOLSA<span>ANALYTICS</span></AppLink><span className="topbar-divider" /><span className="topbar-context">{current?.label ?? "404"}</span><form className="global-search" onSubmit={search} role="search"><label className="sr-only" htmlFor="global-asset-search">Buscar ativo no mercado</label><input id="global-asset-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar símbolo ou ativo…" /><button type="submit">Buscar <span aria-hidden="true">↵</span></button></form><Clock /><span className="historical-badge"><span aria-hidden="true" />Históricos</span></header>
+    <div className="app-frame"><aside className="terminal-navigation"><div className="navigation-caption"><span>Área de trabalho</span><button type="button" onClick={() => setCollapsed((value) => !value)} aria-expanded={!collapsed} aria-label={collapsed ? "Expandir navegação" : "Recolher navegação"}>{collapsed ? "›" : "‹"}</button></div><nav aria-label="Páginas do terminal">{pages.map((page) => <AppLink key={page.path} href={page.path} className={`page-nav-item ${pathname === page.path ? "active" : ""}`} aria-current={pathname === page.path ? "page" : undefined} title={page.label}><Icon name={page.icon} size={16} /><span>{page.label}</span><small className="mono">{page.code}</small></AppLink>)}</nav><div className="navigation-footer"><span className="nav-brand mono">BA<span>_</span></span><p>Projeto acadêmico<br />Análise de mercado</p></div></aside>
+      <div className="page-container"><div className="page-heading"><div><p className="eyebrow">BOLSA ANALYTICS <span>/ {current?.code ?? "404"}</span></p><h1>{current?.label ?? "Página não encontrada"}</h1><p className="page-description">{current?.detail ?? "Este endereço não corresponde a uma página do terminal."}</p></div>{pathname !== "/comparacao" && <AppLink className="compare-cta" href="/comparacao"><Icon name="compare" size={17} /><span>Comparar ativos<small>Preços · variações · candles</small></span><span aria-hidden="true">↗</span></AppLink>}</div>
+        <main id="main-content" className="page-content" tabIndex={-1}><Suspense fallback={<div className="panel state-message" role="status">Carregando página…</div>}>{pathname === "/" ? <HomePage /> : pathname === "/mercado" ? <MarketPage /> : pathname === "/graficos" ? <ChartsPage /> : pathname === "/candles" ? <CandlesPage /> : pathname === "/comparacao" ? <ComparisonPage /> : <div className="panel state-message"><h2>Endereço não encontrado</h2><AppLink className="action-button" href="/">Voltar à visão geral</AppLink></div>}</Suspense></main>
+        <footer className="terminal-footer"><span><span className="footer-dot" aria-hidden="true" />Bolsa Analytics <span className="footer-divider">/</span> Projeto acadêmico</span><span>Históricos da fonte · atualização por consulta <span className="footer-divider">/</span> Sem confirmação de tempo real</span></footer>
+      </div>
+    </div>
+  </div>;
+}
+
+export default function App() {
+  return <MarketOverviewProvider><Terminal /></MarketOverviewProvider>;
+}

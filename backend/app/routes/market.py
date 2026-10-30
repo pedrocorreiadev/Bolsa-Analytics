@@ -3,7 +3,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.providers.yfinance_provider import ATIVOS, PERIODOS
+from app.providers.yfinance_provider import ATIVOS, validar_periodo_intervalo
 from app.services.market_service import (
     listar_ativos,
     consultar_historico
@@ -24,7 +24,8 @@ def obter_ativos():
 @router.get("/{ativo}/history")
 def obter_historico_ativo(
     ativo: str,
-    period: str = Query(default="1mo")
+    period: str = Query(default="1mo"),
+    interval: str = Query(default="1d"),
 ):
     """Retorna o historico financeiro de um ativo."""
 
@@ -36,14 +37,16 @@ def obter_historico_ativo(
             detail="Ativo nao encontrado."
         )
 
-    if period not in PERIODOS:
+    try:
+        validar_periodo_intervalo(period, interval)
+    except ValueError as erro:
         raise HTTPException(
             status_code=400,
-            detail="Periodo nao permitido."
-        )
+            detail=str(erro),
+        ) from erro
 
     try:
-        return consultar_historico(ativo, period)
+        return consultar_historico(ativo, period, interval)
 
     except ValueError as erro:
         raise HTTPException(

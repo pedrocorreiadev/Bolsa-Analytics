@@ -2,21 +2,37 @@
 
 Plataforma acadêmica de análise e visualização de dados do mercado financeiro, desenvolvida por Pedro, Natan e Williane em um único repositório.
 
-Esta primeira etapa prepara a estrutura de trabalho da equipe: frontend com uma página temporária, backend com verificação de saúde e documentação. As análises, fontes de dados e visualizações serão implementadas nas próximas etapas.
+O frontend oferece um terminal financeiro em cinco páginas, com layout inspirado no OpenTerminal e identidade Bolsa Analytics. Mantém React, TypeScript, Vite, Tailwind e Recharts; Lightweight Charts atende aos candles e gráficos financeiros interativos. Os ícones são SVGs locais do Phosphor, sem Lucide.
 
-Os mercados previstos são a bolsa brasileira (B3), dólar comercial (USD/BRL), mini dólar futuro (WDO), ouro e Bitcoin. A fonte principal planejada é o `yfinance`; WDO poderá exigir um provedor específico, cuja integração ficará isolada na camada de fontes de dados.
+**Dados de mercado:** as páginas principais consultam o FastAPI, que obtém OHLCV do Yahoo Finance por yfinance. Não há confirmação de tempo real. Petrobras, Vale, Ibovespa, dólar à vista USD/BRL, ouro futuro GC=F e Bitcoin são os ativos integrados. Moeda, unidade e fuso efetivo acompanham as respostas. WDO não está disponível.
+
+**Laboratório preservado:** em `/graficos`, o botão “Laboratório com séries simuladas” abre os componentes originais com PETR4, VALE3 e ITUB4, filtros de 7/30/90 dias, média, indicadores, comparação e tabela. Somente esse laboratório utiliza as séries locais simuladas, encerradas em 26/10/2026.
+
+## Páginas
+
+| Rota | Conteúdo |
+| --- | --- |
+| `/` | Panorama dos ativos, últimos fechamentos e atalhos |
+| `/mercado` | Busca, filtros de classe/variação, ordenação e acesso às análises |
+| `/graficos` | Evolução de preços da API e laboratório simulado opcional |
+| `/candles` | OHLCV, volume disponível, período/intervalo, crosshair, zoom e deslocamento |
+| `/comparacao` | Dois ativos, variação no período comum, base 100, preços compatíveis, candles sincronizados e estatísticas |
+
+Seleções ficam na URL, por exemplo `/candles?ativo=petrobras&periodo=3mo&intervalo=1wk` e `/comparacao?primeiro=petrobras&segundo=vale&periodo=1mo&intervalo=1d`. A comparação usa apenas as datas presentes nos dois históricos, sem preencher lacunas. Preços só são sobrepostos quando moeda e unidade coincidem. Cada mercado mantém seu calendário/fuso; datas iguais não significam fechamentos simultâneos.
+
+O roteamento usa a History API do navegador. Vite e seu preview atendem links diretos. Em uma futura hospedagem estática, configure o fallback de rotas para `index.html`.
 
 ## Tecnologias
 
 | Camada | Tecnologias |
 | --- | --- |
 | Backend | Python 3.12+, FastAPI, Uvicorn, Pydantic |
-| Dados, para uso futuro | Pandas e yfinance, já declarados nas dependências |
+| Dados | Pandas e yfinance |
 | Frontend | React, TypeScript, Vite e Tailwind CSS |
-| Visualizações, para uso futuro | Recharts e Lucide React, já declarados nas dependências |
+| Visualizações | Recharts, Lightweight Charts e ícones SVG locais do Phosphor |
 | Colaboração | Git, GitHub e Pull Requests |
 
-O `python-dotenv` permite ao Uvicorn carregar a configuração local com `--env-file`. Não há banco de dados, autenticação ou funcionalidades financeiras nesta etapa.
+O `python-dotenv` permite ao Uvicorn carregar a configuração local com `--env-file`. Não há banco de dados, autenticação ou execução de operações.
 
 ## Equipe
 
@@ -77,7 +93,7 @@ Pacotes Python contêm `__init__.py`. Diretórios ainda vazios contêm `.gitkeep
 
 ## Preparação
 
-Instale Python 3.12 ou superior, Node.js 22.12 ou superior e Git. Node.js 24 é uma opção compatível para o desenvolvimento.
+Instale Python 3.12 ou superior, Node.js 24 ou superior e Git. Os testes frontend utilizam o suporte nativo a TypeScript do Node.js 24, sem adicionar um executor de testes.
 
 ```bash
 git clone https://github.com/pedrocorreiadev/Bolsa-Analytics.git
@@ -96,7 +112,7 @@ No Linux/macOS:
 cp .env.example .env
 ```
 
-O `.env` local define `FRONTEND_ORIGIN=http://localhost:5173`, usado pelo CORS do backend. `VITE_API_BASE_URL=http://127.0.0.1:8000` está reservado à integração futura; a página temporária ainda não consulta a API. O Vite está configurado para ler o `.env` da raiz. Variáveis com prefixo `VITE_` são públicas no navegador.
+O `.env` local define `FRONTEND_ORIGIN=http://localhost:5173`, usado pelo CORS do backend, e `VITE_API_BASE_URL=http://127.0.0.1:8000`, utilizado pelo serviço HTTP do frontend. O Vite lê o `.env` da raiz. Variáveis com prefixo `VITE_` são públicas no navegador.
 
 ## Executar o backend
 
@@ -137,7 +153,9 @@ npm ci
 npm run dev
 ```
 
-Abra [http://localhost:5173](http://localhost:5173). A página exibe **Bolsa Analytics** e a descrição da plataforma. O backend não precisa estar ligado para essa página temporária funcionar.
+Abra [http://localhost:5173](http://localhost:5173). Mantenha o backend em execução para os dados de mercado. Se a API ou a fonte falhar, a interface mostra o erro e permite tentar novamente; não substitui dados reais por séries artificiais. O laboratório simulado funciona independentemente da API.
+
+Use a navegação para alternar páginas e a busca superior para encontrar um ativo no mercado. Nos gráficos, arraste para deslocar e use rolagem ou pinça para zoom. Com foco no gráfico, as setas percorrem sessões, Shift+setas deslocam, +/− ajustam o zoom e 0 ajusta todo o histórico. Seletores, ações e tabelas têm foco visível; tabelas extensas mantêm rolagem própria.
 
 A porta 5173 é fixa: se estiver ocupada, o Vite encerra com erro. Isso evita alterar a origem silenciosamente e invalidar o CORS. Use `localhost` ao abrir o frontend; `http://127.0.0.1:5173` é uma origem diferente e não está autorizada no backend por padrão.
 
@@ -145,6 +163,7 @@ Para validar o frontend:
 
 ```bash
 npm run lint
+npm test
 npm run build
 ```
 
@@ -163,8 +182,8 @@ main
 └── feature/charts    → Williane
 ```
 
-Os comandos de criação, sincronização, commit, push e Pull Request estão em [Fluxo Git](docs/GIT_WORKFLOW.md). Combine mudanças em arquivos compartilhados antes de editá-los. A integração do frontend com a API será feita por Pedro; os gráficos da Williane receberão os dados por props.
+Os comandos de criação, sincronização, commit, push e Pull Request estão em [Fluxo Git](docs/GIT_WORKFLOW.md). Combine mudanças em arquivos compartilhados antes de editá-los. Os componentes recebem históricos por props; serviços e hooks centralizam a integração e compartilham consultas por até 60 segundos, com atualização manual.
 
-Consulte também [Arquitetura](docs/ARQUITETURA.md) para a separação entre fontes, processamento, serviços, rotas e componentes. Esta base não realiza consultas financeiras nem contém dashboard definitivo, gráficos, login ou persistência.
+Para validar o backend, execute em `backend/`: `.\.venv\Scripts\python.exe -m unittest discover -s tests -v`. Os testes usam mocks, sem dependência de disponibilidade do Yahoo Finance. Veja os contratos em [API](docs/API.md) e os avisos de licenças em [Recursos de terceiros](THIRD_PARTY_NOTICES.md). Não há login, persistência ou execução de operações.
 
 Referências de configuração: [Vite](https://vite.dev/guide/), [Tailwind com Vite](https://tailwindcss.com/docs/installation/using-vite) e [CORS no FastAPI](https://fastapi.tiangolo.com/tutorial/cors/).
