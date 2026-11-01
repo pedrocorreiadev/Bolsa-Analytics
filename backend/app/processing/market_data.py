@@ -1,4 +1,7 @@
 
+import math
+from numbers import Number
+
 import pandas as pd
 
 
@@ -13,49 +16,57 @@ def preparar_historico(dados: pd.DataFrame) -> list[dict]:
     if dados.empty:
         return []
 
-    colunas = ["Open", "High", "Low", "Close", "Volume"]
-
-    # Verificar se as colunas obrigatorias existem
     obrigatorias = ["Open", "High", "Low", "Close"]
-
     faltando = [c for c in obrigatorias if c not in dados.columns]
-
     if faltando:
         raise ValueError(f"Colunas ausentes: {faltando}")
 
-    # Criar copia para nao modificar os dados originais
     df = dados.copy()
-
-    # Tratar volume ausente
     if "Volume" not in df.columns:
         df["Volume"] = float("nan")
 
-    # Converter valores para tipos numericos
-    for coluna in colunas:
+    for coluna in [*obrigatorias, "Volume"]:
         df[coluna] = pd.to_numeric(df[coluna], errors="coerce")
 
-    # Remover registros com precos invalidos
     df = df.dropna(subset=obrigatorias)
-
-    # Organizar por data
-    df = df.sort_index()
-
-    resultado = []
+    por_data = {}
 
     for data, linha in df.iterrows():
-        registro = {
-            "date": pd.Timestamp(data).strftime("%Y-%m-%d"),
-            "open": round(float(linha["Open"]), 4),
-            "high": round(float(linha["High"]), 4),
-            "low": round(float(linha["Low"]), 4),
-            "close": round(float(linha["Close"]), 4),
-            "volume": (
-                int(linha["Volume"])
-                if pd.notna(linha["Volume"])
-                else None
-            )
+        # Intervalos diários ou superiores preservam a data da sessão no
+        # fuso da fonte. Não desloca para UTC nem cria sessões faltantes.
+        if isinstance(data, Number):
+            continue
+        try:
+            instante = pd.Timestamp(data)
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if pd.isna(instante):
+            continue
+
+        abertura, maxima, minima, fechamento = (
+            float(linha[coluna]) for coluna in obrigatorias
+        )
+        precos = (abertura, maxima, minima, fechamento)
+        if not all(math.isfinite(preco) for preco in precos):
+            continue
+        if maxima < max(abertura, minima, fechamento) or minima > min(abertura, maxima, fechamento):
+            continue
+
+        volume_fonte = float(linha["Volume"]) if pd.notna(linha["Volume"]) else float("nan")
+        volume = (
+            int(volume_fonte)
+            if math.isfinite(volume_fonte) and volume_fonte >= 0
+            else None
+        )
+        dia = instante.strftime("%Y-%m-%d")
+        por_data[dia] = {
+            "date": dia,
+            "open": round(abertura, 4),
+            "high": round(maxima, 4),
+            "low": round(minima, 4),
+            "close": round(fechamento, 4),
+            "volume": volume,
         }
 
-        resultado.append(registro)
-
-    return resultado
+    # Em duplicidades usa o último registro válido da fonte; não agrega OHLC.
+    return [por_data[dia] for dia in sorted(por_data)]

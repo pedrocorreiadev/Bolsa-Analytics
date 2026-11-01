@@ -1,0 +1,47 @@
+name: bolsa-analytics
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      FRONTEND_ORIGIN: "http://localhost:${BOLSA_PORT:-8081}"
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json, urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)) == {'status': 'ok'}"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "127.0.0.1:${BOLSA_PORT:-8081}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+        restart: true
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"

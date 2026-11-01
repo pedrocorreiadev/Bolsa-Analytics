@@ -1,79 +1,72 @@
 # Arquitetura do Bolsa Analytics
 
-O Bolsa Analytics é uma aplicação acadêmica organizada em um único repositório, com backend Python e frontend React separados. Esta primeira etapa fornece somente a estrutura inicial: uma página de apresentação e um endpoint de saúde. As funcionalidades financeiras serão desenvolvidas depois.
+O Bolsa Analytics reúne uma API Python/FastAPI e um frontend React/TypeScript em um único repositório. O frontend oferece visão geral, mercado, gráficos, candles e comparação de ativos. A API consulta históricos do Yahoo Finance por yfinance e valida os registros OHLCV com Pandas antes de entregar JSON.
 
-## Estado atual
+## Execução com Docker
 
-- **Backend:** FastAPI com `GET /health`, CORS para desenvolvimento local e diretórios reservados para as próximas camadas.
-- **Frontend:** React, TypeScript e Vite, com Tailwind CSS e uma página inicial temporária.
-- **Dependências futuras já declaradas:** Pandas e yfinance no backend; Recharts e Lucide React no frontend. A declaração dessas bibliotecas não significa que consultas, gráficos ou ícones já estejam implementados.
-- **Persistência:** não há banco de dados nem cache funcional.
-- **Acesso:** não há autenticação ou tela de login.
+O `compose.yaml` inicia dois serviços:
+
+| Serviço | Responsabilidade |
+| --- | --- |
+| `backend` | Python 3.12, FastAPI e Uvicorn, escutando em `0.0.0.0:8000` dentro da rede do Compose. Não publica uma porta na máquina. |
+| `frontend` | Nginx servindo o build React e encaminhando `/api`, `/health` e a documentação ao backend. Publica `127.0.0.1:8081` por padrão. |
+
+A entrega não depende de `.env`, Python, Node.js, ambientes virtuais ou dependências instaladas na máquina do professor. O comando `docker compose up --build -d`, executado na raiz após clonar o repositório, prepara e inicia o ambiente. Docker precisa estar em execução com contêineres Linux e acesso à internet. As instruções estão no [README](../README.md#executar-com-docker--entrega-ao-professor).
+
+As imagens base são fixadas por digest. O build do frontend usa `npm ci` com o lockfile e executa lint, testes e compilação. O backend usa as dependências diretas de `requirements.txt`, com as versões transitivas fixadas por `requirements.lock.txt`, verifica a consistência com `pip check` e executa os testes existentes. A imagem final da API roda com um usuário sem privilégios e mantém um diretório de usuário gravável para os caches internos do yfinance.
+
+O Compose aguarda o healthcheck do backend antes de iniciar o frontend. O healthcheck do frontend consulta `/health` através do Nginx, verificando também a comunicação entre os serviços. Os contêineres têm política de reinício `unless-stopped`. O proxy usa o DNS do Docker para acompanhar mudanças no endereço interno do backend.
+
+No build Docker, `VITE_API_BASE_URL=/` resulta em chamadas como `/api/assets` na mesma origem do site. O proxy preserva esse caminho e os parâmetros da consulta. O nome interno `backend` não é utilizado pelo navegador. O fallback do Nginx para `index.html` permite abrir e atualizar as rotas React diretamente; erros HTTP da API continuam sendo respostas JSON.
+
+Somente os arquivos necessários entram nas imagens. `.dockerignore` exclui ambientes virtuais, `node_modules`, builds locais, caches, logs e arquivos `.env`. Não existem volumes ou banco de dados a preparar. A variável opcional `BOLSA_PORT` altera a porta publicada sem recompilar a URL da API no frontend.
 
 ## Separação de responsabilidades
 
-| Diretório | Responsabilidade |
+| Diretório ou arquivo | Responsabilidade |
 | --- | --- |
-| `backend/app/main.py` | Inicialização da aplicação FastAPI e configuração de CORS. |
-| `backend/app/routes/` | Rotas HTTP. Na base inicial, somente a verificação de saúde está implementada. |
-| `backend/app/services/` | Espaço reservado para coordenar consultas e regras de negócio futuras. |
-| `backend/app/processing/` | Espaço reservado para limpeza, transformação e cálculos com Pandas. |
-| `backend/app/providers/` | Espaço reservado para adaptar fontes externas ao backend. |
-| `backend/app/cache/` | Espaço reservado para uma eventual estratégia de cache; não representa um banco de dados. |
-| `backend/tests/` | Espaço reservado para testes do backend. |
-| `frontend/src/components/layout/` | Estrutura visual, cabeçalho e navegação. |
-| `frontend/src/components/ui/` | Componentes visuais reutilizáveis. |
-| `frontend/src/components/charts/` | Espaço reservado para gráficos que receberão dados por props. |
-| `frontend/src/pages/` | Composição das páginas da aplicação. |
-| `frontend/src/services/` | Espaço reservado para chamadas HTTP ao backend. |
-| `frontend/src/hooks/` | Espaço reservado para hooks de consulta e integração. |
-| `frontend/src/types/` | Espaço reservado para tipos TypeScript e contratos de integração acordados pela equipe. |
-| `frontend/src/styles/` e `frontend/src/assets/` | Estilos globais e recursos visuais. |
+| `backend/app/main.py` | Inicialização do FastAPI e configuração de CORS. |
+| `backend/app/routes/` | Saúde, catálogo de ativos, parâmetros e erros HTTP. |
+| `backend/app/services/` | Coordenação das consultas e montagem das respostas. |
+| `backend/app/providers/` | Símbolos, metadados e acesso ao Yahoo Finance. |
+| `backend/app/processing/` | Validação e tratamento dos registros OHLCV. |
+| `backend/app/cache/` | Diretório reservado, sem cache de aplicação implementado no backend. |
+| `backend/tests/` | Testes de processamento, contratos e rotas, com a fonte simulada por mocks. |
+| `frontend/src/router/` | Navegação pela History API e parâmetros na URL. |
+| `frontend/src/pages/` | Composição das cinco páginas e do laboratório acadêmico. |
+| `frontend/src/components/` | Interface, barra lateral, gráficos e componentes reutilizáveis. |
+| `frontend/src/services/` | Consultas HTTP, validação de respostas e compartilhamento das requisições. |
+| `frontend/src/hooks/` e `frontend/src/context/` | Estado de consulta, atualização e integração com os componentes. |
+| `frontend/src/utils/` e `frontend/src/types/` | Cálculos, formatação e contratos TypeScript. |
+| `frontend/src/styles/` e `frontend/src/assets/` | Estilos e recursos visuais, incluindo SVGs locais do Phosphor. |
 
-## Fluxo financeiro planejado
-
-O fluxo abaixo é uma orientação para a próxima etapa e ainda não está implementado:
+## Fluxo dos dados
 
 ```text
-Fonte financeira
-    → provider do backend
-    → service, que coordena a consulta e o processamento
-    → processing com Pandas
-    → rota FastAPI com resposta JSON padronizada
-    → service HTTP e hook do frontend
-    → página que entrega os dados por props
-    → componente de gráfico
+Yahoo Finance
+    → provider yfinance
+    → service e processamento com Pandas
+    → rota FastAPI com resposta JSON
+    → Nginx no Docker, preservando /api e a consulta
+    → serviço HTTP e hooks React
+    → páginas e componentes de gráfico
 ```
 
-Os providers deverão concentrar os detalhes de cada fonte. Os services coordenarão os providers e o processamento, enquanto as rotas cuidarão da interface HTTP. A camada `processing` tratará os dados antes da serialização em JSON; objetos internos de Pandas não serão um contrato direto com os componentes React.
+O catálogo inclui Petrobras, Vale, Ibovespa, dólar USD/BRL, euro EUR/BRL, libra GBP/BRL, iene JPY/BRL, ouro futuro GC=F e Bitcoin. Moeda, unidade e fuso acompanham os históricos. WDO não é atendido. Os detalhes de parâmetros, qualidade de dados e erros estão em [API.md](API.md).
 
-No frontend, Pedro desenvolverá os services HTTP, hooks e a ligação com as páginas. Williane desenvolverá os gráficos e seus filtros de apresentação com dados recebidos por props. Esses componentes não precisarão conhecer a biblioteca usada para obter os dados financeiros.
+Os históricos são ordenados e deduplicados, sem preencher sessões ausentes ou inventar candles. A comparação usa apenas datas comuns e sobrepõe preços somente quando moeda e unidade coincidem. Datas iguais entre mercados não garantem fechamentos simultâneos.
 
-Os tipos, nomes de campos, formatos de datas, unidades e tratamento de erros serão definidos em conjunto antes da implementação de cada integração. Esta base não estabelece contratos financeiros antecipadamente.
+O serviço HTTP do frontend compartilha requisições em andamento e respostas por até 60 segundos. O panorama carregado permanece no contexto durante a navegação e pode ser atualizado manualmente. Não há autenticação, banco de dados, persistência funcional ou execução de operações financeiras.
 
-## Fontes e expansão previstas
+O laboratório em `/graficos` mantém as séries locais simuladas separadas das consultas reais. Falhas da fonte são exibidas na interface e não são substituídas por dados artificiais. Os indicadores da barra lateral usam os mesmos históricos diários de um mês do panorama.
 
-A fonte principal planejada é o `yfinance`. O projeto pretende trabalhar futuramente com B3, dólar comercial (USD/BRL), mini dólar futuro (WDO), ouro e Bitcoin.
+## Desenvolvimento local sem Docker
 
-A disponibilidade de cada instrumento, símbolo e histórico precisará ser validada na etapa de integração. Não há promessa de que todos esses mercados sejam atendidos pelo yfinance. Para WDO, poderá ser criado outro provider no diretório correspondente; essa separação permitirá acrescentar uma fonte sem reorganizar as camadas do sistema ou acoplar os gráficos à origem dos dados.
+O desenvolvimento continua disponível com Vite em `http://localhost:5173` e FastAPI em `http://127.0.0.1:8000`. Nesse modo, crie o `.env` da raiz a partir de `.env.example`:
 
-## Configuração local
+- `FRONTEND_ORIGIN` configura a origem única autorizada pelo CORS do backend.
+- `VITE_API_BASE_URL` define a base das consultas HTTP do frontend.
 
-O arquivo `.env` fica na raiz do repositório e deve ser criado a partir de `.env.example`. Ele não deve ser versionado.
+O Vite lê o `.env` da raiz por `envDir: '..'`. Variáveis `VITE_*` são públicas e incorporadas ao build. O Uvicorn carrega o arquivo com `--env-file ../.env`. Os comandos completos estão no README; essa configuração local não é necessária para a entrega Docker.
 
-- `FRONTEND_ORIGIN`: origem única permitida pelo CORS. O padrão é `http://localhost:5173`.
-- `VITE_API_BASE_URL`: endereço reservado para a futura integração HTTP do frontend. O valor inicial é `http://127.0.0.1:8000`; a página temporária não o utiliza para fazer consultas.
-
-O Vite usa `envDir: '..'` para ler o arquivo da raiz. Variáveis com prefixo `VITE_` ficam disponíveis no código do navegador e não devem conter segredos.
-
-O backend consulta `FRONTEND_ORIGIN` com `os.getenv`. Para carregar o arquivo da raiz, execute a partir de `backend/`:
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --env-file ../.env
-```
-
-O suporte a esse carregamento é fornecido pela dependência declarada `python-dotenv`. Sem um arquivo carregado ou uma variável de ambiente definida, a configuração de CORS usa a origem padrão. O CORS autoriza `GET`, sem credenciais; novas necessidades deverão ser configuradas quando houver novas rotas. `localhost` e `127.0.0.1` representam origens diferentes para o navegador, assim como portas diferentes.
-
-## Evolução da base
-
-Cada nova funcionalidade deverá manter a separação entre fonte, processamento, HTTP e apresentação. Antes de integrar código, a equipe deverá combinar as props dos gráficos, os tipos compartilhados e os arquivos de composição que precisarão mudar. A divisão por integrante está em [RESPONSABILIDADES.md](RESPONSABILIDADES.md), o contrato atualmente disponível em [API.md](API.md) e o processo de integração em [GIT_WORKFLOW.md](GIT_WORKFLOW.md).
+As responsabilidades da equipe estão em [RESPONSABILIDADES.md](RESPONSABILIDADES.md) e o fluxo de colaboração em [GIT_WORKFLOW.md](GIT_WORKFLOW.md).
