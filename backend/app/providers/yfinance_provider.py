@@ -7,6 +7,9 @@ ATIVOS = {
     "vale": "VALE3.SA",
     "ibovespa": "^BVSP",
     "dolar": "BRL=X",
+    "euro": "EURBRL=X",
+    "libra": "GBPBRL=X",
+    "iene": "JPYBRL=X",
     "ouro": "GC=F",
     "bitcoin": "BTC-USD"
 }
@@ -18,6 +21,9 @@ METADADOS_ATIVOS = {
     "vale": {"name": "Vale", "category": "Ações", "currency": "BRL", "unit": "currency"},
     "ibovespa": {"name": "Ibovespa", "category": "Índices", "currency": "BRL", "unit": "points"},
     "dolar": {"name": "Dólar à vista (USD/BRL)", "category": "Câmbio", "currency": "BRL", "unit": "currency"},
+    "euro": {"name": "Euro (EUR/BRL)", "category": "Câmbio", "currency": "BRL", "unit": "currency"},
+    "libra": {"name": "Libra esterlina (GBP/BRL)", "category": "Câmbio", "currency": "BRL", "unit": "currency"},
+    "iene": {"name": "Iene japonês (JPY/BRL)", "category": "Câmbio", "currency": "BRL", "unit": "currency"},
     "ouro": {"name": "Ouro futuro (GC)", "category": "Futuros", "currency": "USD", "unit": "currency"},
     "bitcoin": {"name": "Bitcoin", "category": "Criptoativos", "currency": "USD", "unit": "currency"},
 }

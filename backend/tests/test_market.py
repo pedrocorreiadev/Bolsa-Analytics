@@ -92,6 +92,12 @@ class ContratoTests(unittest.TestCase):
         self.assertEqual(ativos["ouro"]["category"], "Futuros")
         self.assertEqual(ativos["ibovespa"]["unit"], "points")
         self.assertNotIn("wdo", ativos)
+        for nome, ticker in [("euro", "EURBRL=X"), ("libra", "GBPBRL=X"), ("iene", "JPYBRL=X")]:
+            with self.subTest(ativo=nome):
+                self.assertEqual(ativos[nome]["ticker"], ticker)
+                self.assertEqual(ativos[nome]["category"], "Câmbio")
+                self.assertEqual(ativos[nome]["currency"], "BRL")
+                self.assertEqual(ativos[nome]["unit"], "currency")
 
     def test_combinacoes_de_periodo_e_intervalo(self):
         for periodo in ["5d", "1mo", "3mo", "6mo", "1y", "2y", "5y"]:
@@ -142,6 +148,10 @@ class ContratoTests(unittest.TestCase):
         status, _ = solicitar("/api/assets/vale/history", "period=3mo&interval=1wk")
         self.assertEqual(status, 200)
         consultar.assert_called_with("vale", "3mo", "1wk")
+        for ativo in ["euro", "libra", "iene"]:
+            with self.subTest(ativo=ativo):
+                self.assertEqual(solicitar(f"/api/assets/{ativo}/history")[0], 200)
+                consultar.assert_called_with(ativo, "1mo", "1d")
         consultar.reset_mock()
         self.assertEqual(solicitar("/api/assets/vale/history", "period=5d&interval=1wk")[0], 400)
         self.assertEqual(solicitar("/api/assets/wdo/history")[0], 404)
@@ -156,7 +166,7 @@ class ContratoTests(unittest.TestCase):
         self.assertEqual(solicitar("/health"), (200, {"status": "ok"}))
         status, ativos = solicitar("/api/assets")
         self.assertEqual(status, 200)
-        self.assertEqual(len(ativos), 6)
+        self.assertEqual(len(ativos), 9)
 
 
 if __name__ == "__main__":

@@ -12,6 +12,8 @@ A partir de `backend/`, com as dependências instaladas conforme o [README](../R
 
 Base local: `http://127.0.0.1:8000`. Documentação automática em `/docs`, `/redoc` e `/openapi.json`.
 
+No Docker, execute `docker compose up --build -d` na raiz, sem preparar um `.env`. A API fica acessível pelo Nginx em `http://localhost:8081`, com os mesmos caminhos descritos abaixo, incluindo `/health` e `/docs`. A porta 8000 é interna aos contêineres. Veja os requisitos e comandos no [README](../README.md#executar-com-docker--entrega-ao-professor).
+
 ## `GET /health`
 
 Retorna HTTP 200 com `{"status":"ok"}`. Confirma a resposta da aplicação, sem consultar a fonte financeira.
@@ -36,6 +38,9 @@ Retorna o catálogo de instrumentos atendidos. Os campos originais `id` e `ticke
 | `vale` | `VALE3.SA` | Vale | BRL |
 | `ibovespa` | `^BVSP` | Ibovespa | Pontos |
 | `dolar` | `BRL=X` | Dólar à vista (USD/BRL) | BRL por USD |
+| `euro` | `EURBRL=X` | Euro (EUR/BRL) | BRL por EUR |
+| `libra` | `GBPBRL=X` | Libra esterlina (GBP/BRL) | BRL por GBP |
+| `iene` | `JPYBRL=X` | Iene japonês (JPY/BRL) | BRL por JPY |
 | `ouro` | `GC=F` | Ouro futuro (GC) | USD |
 | `bitcoin` | `BTC-USD` | Bitcoin | USD |
 
