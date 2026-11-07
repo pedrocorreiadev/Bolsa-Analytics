@@ -39,7 +39,7 @@
 .market-ticker-viewport { flex: 1; min-width: 0; overflow: hidden; }
 .market-ticker-viewport:focus-visible { outline-offset: -2px; }
 .market-ticker-track { display: flex; width: 100%; }
-.market-ticker-group { display: flex; align-items: center; justify-content: space-around; flex: 0 0 auto; width: max-content; min-width: 100%; gap: 28px; list-style: none; margin: 0; padding: 0 14px; animation: market-ticker-right var(--ticker-duration, 40s) linear infinite; }
+.market-ticker-group { display: flex; align-items: center; justify-content: space-around; flex: 0 0 auto; width: max-content; min-width: 100%; gap: 28px; list-style: none; margin: 0; padding: 0 14px; animation: market-ticker-left var(--ticker-duration, 40s) linear infinite; }
 .market-ticker-quote { display: flex; flex-shrink: 0; align-items: baseline; gap: 9px; white-space: nowrap; font-size: 10px; font-variant-numeric: tabular-nums; }
 .market-ticker-quote strong { color: #e2e5e9; font-size: 10px; font-weight: 600; }
 .market-ticker-price { color: #c8cdd4; }
@@ -48,11 +48,11 @@
 .market-ticker-toggle:focus-visible { outline-offset: -3px; }
 .market-ticker.is-paused .market-ticker-group { animation-play-state: paused; }
 .market-ticker-status { flex: 1; min-width: 0; margin: 0; padding: 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 9px; }
-@keyframes market-ticker-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes market-ticker-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 @media (prefers-reduced-motion: reduce) {
-  .market-ticker-viewport { overflow-x: auto; }
-  .market-ticker-group { animation: none; }
-  .market-ticker-group[aria-hidden="true"], .terminal-v2 .market-ticker-toggle { display: none; }
+  /* O loop foi solicitado explicitamente; a pausa manual continua disponível.
+     Sobrescreve apenas neste letreiro a duração reduzida de globals.css. */
+  .market-ticker-group { animation-duration: var(--ticker-duration, 40s) !important; }
 }
 .terminal-clock { margin-left: auto; font-size: 9px; color: var(--muted); white-space: nowrap; }
 .terminal-clock time { color: #d5d8dd; margin-left: 8px; font-size: 11px; }

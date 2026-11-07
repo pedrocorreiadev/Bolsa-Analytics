@@ -17,7 +17,7 @@ export default function MarketTicker({ rows, loading }: MarketTickerProps) {
   return <section className={`market-ticker${paused ? " is-paused" : ""}`} aria-label="Letreiro de cotações dos últimos fechamentos">
     <span className="market-ticker-label" title="Históricos da fonte; sem confirmação de tempo real">Cotações <small>Fechamentos</small></span>
     {quotes.length > 0 ? <>
-      <div className="market-ticker-viewport" tabIndex={0} aria-label="Cotações em loop automático da esquerda para a direita. Use as setas para rolar com movimento reduzido.">
+      <div className="market-ticker-viewport" tabIndex={0} aria-label="Cotações em loop automático da direita para a esquerda. Use o botão de pausa para interromper o movimento.">
         <div className="market-ticker-track" style={duration}>
           {[0, 1].map((copy) => <ul className="market-ticker-group" key={copy} aria-hidden={copy === 1 ? true : undefined}>
             {quotes.map((quote) => <li className="market-ticker-quote" key={quote.id} title={`${quote.name} · Fechamento em ${formatMarketDate(quote.date)} · Variação entre os dois últimos fechamentos`}>
