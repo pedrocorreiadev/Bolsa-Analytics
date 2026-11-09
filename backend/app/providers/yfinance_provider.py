@@ -58,6 +58,7 @@ def obter_historico(ativo: str, periodo: str = "1mo", intervalo: str = "1d") -> 
         interval=intervalo,
         auto_adjust=False,
         timeout=10,
+        raise_errors=True,
     )
 
     if dados.empty:

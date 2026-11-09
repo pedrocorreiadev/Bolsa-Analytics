@@ -7,6 +7,10 @@ services:
       target: runtime
     environment:
       FRONTEND_ORIGIN: "http://localhost:${BOLSA_PORT:-8081}"
+      BOLSA_DB_PATH: /app/data/bolsa.sqlite3
+      BOLSA_COOKIE_SECURE: "${BOLSA_COOKIE_SECURE:-false}"
+    volumes:
+      - bolsa-data:/app/data
     init: true
     restart: unless-stopped
     healthcheck:
@@ -45,3 +49,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  bolsa-data:

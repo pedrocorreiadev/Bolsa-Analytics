@@ -21,6 +21,8 @@ COPY --from=test --chown=app:app /app/app/ ./app/
 
 ENV HOME=/home/app XDG_CACHE_HOME=/home/app/.cache
 
+RUN mkdir -p /app/data && chown app:app /app/data
+
 USER app
 EXPOSE 8000
 

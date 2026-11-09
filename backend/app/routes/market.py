@@ -2,6 +2,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, Query
+from app.cache.market_cache import consultar_com_cache
 
 from app.providers.yfinance_provider import ATIVOS, validar_periodo_intervalo
 from app.services.market_service import (
@@ -46,7 +47,7 @@ def obter_historico_ativo(
         ) from erro
 
     try:
-        return consultar_historico(ativo, period, interval)
+        return consultar_com_cache(ativo, period, interval, consultar_historico)
 
     except ValueError as erro:
         raise HTTPException(

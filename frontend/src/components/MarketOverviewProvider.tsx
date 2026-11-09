@@ -1,8 +1,11 @@
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useAccount } from "../hooks/useAccount";
 import { buscarHistoricoMercado, listarAtivos } from "../services/marketService";
 import { MarketOverviewContext, type MarketRow, type OverviewState } from "../context/MarketOverviewContext";
 
 export function MarketOverviewProvider({ children }: { children: ReactNode }) {
+  const { user } = useAccount();
+  const refreshSeconds = user?.preferencias.atualizacao ?? 0;
   const [state, setState] = useState<OverviewState>({ status: "idle", rows: [], error: "" });
   const inFlight = useRef<Promise<void> | null>(null);
   const loaded = useRef(false);
@@ -33,5 +36,10 @@ export function MarketOverviewProvider({ children }: { children: ReactNode }) {
     inFlight.current = request().finally(() => { inFlight.current = null; });
     return inFlight.current;
   }, []);
+  useEffect(() => {
+    if (!refreshSeconds) return;
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void load(true); }, refreshSeconds * 1000);
+    return () => window.clearInterval(timer);
+  }, [refreshSeconds, load]);
   return <MarketOverviewContext.Provider value={{ ...state, load }}>{children}</MarketOverviewContext.Provider>;
 }

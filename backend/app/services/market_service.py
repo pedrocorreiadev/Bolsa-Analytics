@@ -1,4 +1,6 @@
 
+from datetime import datetime, timezone
+
 from app.providers.yfinance_provider import ATIVOS, METADADOS_ATIVOS, obter_historico
 from app.processing.market_data import preparar_historico
 
@@ -45,6 +47,9 @@ def consultar_historico(ativo: str, periodo: str = "1mo", intervalo: str = "1d")
         "unit": metadados["unit"],
         "timezone": str(fuso) if fuso is not None else None,
         "source": "Yahoo Finance / yfinance",
+        "collected_at": datetime.now(timezone.utc).isoformat(),
+        "realtime": False,
+        "quality": {"received": len(dados), "valid": len(historico), "discarded": len(dados) - len(historico)},
         "count": len(historico),
         "data": historico
     }

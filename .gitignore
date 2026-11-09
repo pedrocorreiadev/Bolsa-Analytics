@@ -8,6 +8,7 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+backend/data/
 
 # Node, Vite e caches locais
 node_modules/

@@ -3,7 +3,7 @@ import {
   type MarketAsset, type MarketHistory, type MarketInterval, type MarketPeriod, type OHLCVPoint,
 } from "../types/market.ts";
 
-const API_BASE = (import.meta.env?.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+const API_BASE = (import.meta.env?.VITE_API_BASE_URL || "/").replace(/\/$/, "");
 const CACHE_TTL = 60_000;
 const cache = new Map<string, { expires: number; value: unknown }>();
 const pending = new Map<string, Promise<unknown>>();

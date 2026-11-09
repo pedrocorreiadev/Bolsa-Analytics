@@ -114,7 +114,7 @@ class ContratoTests(unittest.TestCase):
         ticker.return_value.history.return_value = retorno
         self.assertIs(obter_historico("petrobras", "3mo", "1wk"), retorno)
         ticker.assert_called_once_with("PETR4.SA")
-        ticker.return_value.history.assert_called_once_with(period="3mo", interval="1wk", auto_adjust=False, timeout=10)
+        ticker.return_value.history.assert_called_once_with(period="3mo", interval="1wk", auto_adjust=False, timeout=10, raise_errors=True)
 
     @patch("app.services.market_service.obter_historico")
     def test_history_preserva_campos_e_adiciona_metadados(self, fonte):

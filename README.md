@@ -2,7 +2,9 @@
 
 Plataforma acadêmica de análise e visualização de dados do mercado financeiro, desenvolvida por Pedro, Natan e Williane em um único repositório.
 
-O frontend oferece um terminal financeiro em cinco páginas, com layout inspirado no OpenTerminal e identidade Bolsa Analytics. Mantém React, TypeScript, Vite, Tailwind e Recharts; Lightweight Charts atende aos candles e gráficos financeiros interativos. Os ícones são SVGs locais do Phosphor, sem Lucide.
+O frontend oferece um terminal financeiro com gráficos, comparação, tendências, cotações intradiárias e áreas de usuário e administração, com layout inspirado no OpenTerminal e identidade Bolsa Analytics. Mantém React, TypeScript, Vite, Tailwind e Recharts; Lightweight Charts atende aos candles e gráficos financeiros interativos. Os ícones são SVGs locais, com base no Phosphor, sem Lucide.
+
+**Novos recursos:** login/cadastro, perfil, favoritos e configurações persistidos em SQLite; dashboard administrativo protegido; análise de tendência com algoritmo em português, filtros, médias móveis, regressão, correlação e projeções. Veja [Tendências e contas](docs/TENDENCIAS_E_CONTAS.md) para a metodologia e os comandos de criação do administrador. Não existe senha padrão.
 
 **Dados de mercado:** as páginas principais consultam o FastAPI, que obtém OHLCV do Yahoo Finance por yfinance. Não há confirmação de tempo real. Petrobras, Vale, Ibovespa, dólar à vista USD/BRL, euro EUR/BRL, libra GBP/BRL, iene JPY/BRL, ouro futuro GC=F e Bitcoin são os ativos integrados. Moeda, unidade e fuso efetivo acompanham as respostas. WDO não está disponível.
 
@@ -41,7 +43,7 @@ Para acompanhar os logs continuamente, use `docker compose logs -f`. Para encerr
 docker compose down
 ```
 
-Depois de atualizar o código com `git pull`, execute novamente `docker compose up --build -d`. Não há banco de dados a preparar nem pastas locais para montar nos contêineres.
+Depois de atualizar o código com `git pull`, execute novamente `docker compose up --build -d`. O SQLite é preparado automaticamente no volume `bolsa-data`, que preserva contas e preferências entre reinícios. Não há banco externo a instalar nem pastas locais para montar nos contêineres.
 
 Se a porta 8081 estiver ocupada, crie ou edite um `.env` na raiz com `BOLSA_PORT=8082`, execute o mesmo comando e abra `http://localhost:8082`. Esse arquivo é opcional; as variáveis do desenvolvimento local não sobrescrevem a URL da API compilada no Docker.
 
@@ -56,6 +58,13 @@ Se a porta 8081 estiver ocupada, crie ou edite um `.env` na raiz com `BOLSA_PORT
 | `/graficos` | Evolução de preços da API e laboratório simulado opcional |
 | `/candles` | OHLCV, volume disponível, período/intervalo, crosshair, zoom e deslocamento |
 | `/comparacao` | Dois ativos, variação no período comum, base 100, preços compatíveis, candles sincronizados e estatísticas |
+| `/tendencias` | Médias móveis, regressão, estatísticas, correlação, filtros por data e projeções |
+| `/cotacoes` | Cotações intradiárias de um minuto, atualização automática e horário da fonte |
+| `/login` | Entrada e cadastro de usuário |
+| `/conta` | Área pessoal e acompanhamento de favoritos |
+| `/perfil` | Perfil e alteração de senha |
+| `/configuracoes` | Preferências de análise, favoritos e atualização do panorama |
+| `/admin` | Usuários, coleta, qualidade e cache; acesso exclusivo do administrador |
 
 Seleções ficam na URL, por exemplo `/candles?ativo=petrobras&periodo=3mo&intervalo=1wk` e `/comparacao?primeiro=petrobras&segundo=vale&periodo=1mo&intervalo=1d`. A comparação usa apenas as datas presentes nos dois históricos, sem preencher lacunas. Preços só são sobrepostos quando moeda e unidade coincidem. Cada mercado mantém seu calendário/fuso; datas iguais não significam fechamentos simultâneos.
 
@@ -71,7 +80,7 @@ O roteamento usa a History API do navegador. Vite, seu preview e o Nginx incluí
 | Visualizações | Recharts, Lightweight Charts e ícones SVG locais do Phosphor |
 | Colaboração | Git, GitHub e Pull Requests |
 
-O `python-dotenv` permite ao Uvicorn carregar a configuração local com `--env-file`. Não há banco de dados, autenticação ou execução de operações.
+O `python-dotenv` permite ao Uvicorn carregar a configuração local com `--env-file`. SQLite persiste contas, preferências e sessões. A plataforma não executa operações financeiras.
 
 ## Equipe
 
@@ -95,7 +104,7 @@ Bolsa-Analytics/
 │   │   ├── services/         # Orquestração das consultas e respostas
 │   │   ├── processing/       # Validação e tratamento de OHLCV
 │   │   ├── providers/        # Consulta ao Yahoo Finance via yfinance
-│   │   └── cache/            # Reservado para cache; sem implementação
+│   │   └── cache/            # Cache de consultas e métricas de coleta
 │   ├── tests/
 │   ├── Dockerfile
 │   ├── .dockerignore
@@ -158,7 +167,7 @@ No Linux/macOS:
 cp .env.example .env
 ```
 
-O `.env` local define `FRONTEND_ORIGIN=http://localhost:5173`, usado pelo CORS do backend, e `VITE_API_BASE_URL=http://127.0.0.1:8000`, utilizado pelo serviço HTTP do frontend. O Vite lê o `.env` da raiz. Variáveis com prefixo `VITE_` são públicas no navegador.
+O `.env` local define `FRONTEND_ORIGIN=http://localhost:5173`, usado pelo CORS do backend, e `API_PROXY_TARGET=http://127.0.0.1:8000`, destino do proxy do Vite. O navegador usa `/api` na mesma origem para preservar os cookies da sessão. O Vite lê o `.env` da raiz; configurações antigas de `VITE_API_BASE_URL` com URL local ainda são aceitas como destino do proxy. Variáveis com prefixo `VITE_` são públicas no navegador.
 
 ## Executar o backend sem Docker
 
@@ -232,8 +241,8 @@ main
 └── feature/charts    → Williane
 ```
 
-Os comandos de criação, sincronização, commit, push e Pull Request estão em [Fluxo Git](docs/GIT_WORKFLOW.md). Combine mudanças em arquivos compartilhados antes de editá-los. Os componentes recebem históricos por props; serviços e hooks centralizam a integração e compartilham consultas por até 60 segundos, com atualização manual.
+Os comandos de criação, sincronização, commit, push e Pull Request estão em [Fluxo Git](docs/GIT_WORKFLOW.md). Combine mudanças em arquivos compartilhados antes de editá-los. Os componentes recebem históricos por props; serviços e hooks centralizam a integração e compartilham consultas por até 60 segundos. O panorama pode ter atualização automática configurada na conta; cotações intradiárias têm controle próprio.
 
-Para validar o backend, execute em `backend/`: `.\.venv\Scripts\python.exe -m unittest discover -s tests -v`. Os testes usam mocks, sem dependência de disponibilidade do Yahoo Finance. Veja os contratos em [API](docs/API.md) e os avisos de licenças em [Recursos de terceiros](THIRD_PARTY_NOTICES.md). Não há login, persistência ou execução de operações.
+Para validar o backend, execute em `backend/`: `.\.venv\Scripts\python.exe -m unittest discover -s tests -v`. Os testes usam mocks e bancos temporários, sem dependência de disponibilidade do Yahoo Finance. Veja os contratos em [API](docs/API.md), os recursos de [Tendências e contas](docs/TENDENCIAS_E_CONTAS.md) e os avisos de licenças em [Recursos de terceiros](THIRD_PARTY_NOTICES.md). A plataforma não executa operações financeiras.
 
 Referências de configuração: [Vite](https://vite.dev/guide/), [Tailwind com Vite](https://tailwindcss.com/docs/installation/using-vite) e [CORS no FastAPI](https://fastapi.tiangolo.com/tutorial/cors/).

@@ -1,6 +1,6 @@
 # Arquitetura do Bolsa Analytics
 
-O Bolsa Analytics reúne uma API Python/FastAPI e um frontend React/TypeScript em um único repositório. O frontend oferece visão geral, mercado, gráficos, candles e comparação de ativos. A API consulta históricos do Yahoo Finance por yfinance e valida os registros OHLCV com Pandas antes de entregar JSON.
+O Bolsa Analytics reúne API Python/FastAPI e frontend React/TypeScript. Oferece visão geral, mercado, gráficos, candles, comparação, tendências, cotações intradiárias, login e áreas pessoal e administrativa. A API consulta Yahoo Finance por yfinance, valida registros com Pandas e calcula tendências. SQLite persiste usuários, preferências e sessões.
 
 ## Execução com Docker
 
@@ -19,7 +19,7 @@ O Compose aguarda o healthcheck do backend antes de iniciar o frontend. O health
 
 No build Docker, `VITE_API_BASE_URL=/` resulta em chamadas como `/api/assets` na mesma origem do site. O proxy preserva esse caminho e os parâmetros da consulta. O nome interno `backend` não é utilizado pelo navegador. O fallback do Nginx para `index.html` permite abrir e atualizar as rotas React diretamente; erros HTTP da API continuam sendo respostas JSON.
 
-Somente os arquivos necessários entram nas imagens. `.dockerignore` exclui ambientes virtuais, `node_modules`, builds locais, caches, logs e arquivos `.env`. Não existem volumes ou banco de dados a preparar. A variável opcional `BOLSA_PORT` altera a porta publicada sem recompilar a URL da API no frontend.
+Somente os arquivos necessários entram nas imagens. `.dockerignore` exclui ambientes virtuais, `node_modules`, builds locais, caches, logs, arquivos `.env` e bancos locais. O volume `bolsa-data` é criado automaticamente para o SQLite em `/app/data/bolsa.sqlite3`, com diretório gravável pelo usuário do backend. A variável opcional `BOLSA_PORT` altera a porta publicada sem recompilar a URL da API no frontend.
 
 ## Separação de responsabilidades
 
@@ -30,10 +30,12 @@ Somente os arquivos necessários entram nas imagens. `.dockerignore` exclui ambi
 | `backend/app/services/` | Coordenação das consultas e montagem das respostas. |
 | `backend/app/providers/` | Símbolos, metadados e acesso ao Yahoo Finance. |
 | `backend/app/processing/` | Validação e tratamento dos registros OHLCV. |
-| `backend/app/cache/` | Diretório reservado, sem cache de aplicação implementado no backend. |
+| `backend/app/cache/` | Cache de até 60s por consulta, exclusão mútua, contadores e últimos 50 eventos. |
+| `backend/app/database.py` | Conexões SQLite, tabelas de usuários, sessões e limitação de tentativas. |
+| `backend/app/processing/tendencias.py` | Médias móveis, regressão, estatística descritiva, correlação e projeções. |
 | `backend/tests/` | Testes de processamento, contratos e rotas, com a fonte simulada por mocks. |
 | `frontend/src/router/` | Navegação pela History API e parâmetros na URL. |
-| `frontend/src/pages/` | Composição das cinco páginas e do laboratório acadêmico. |
+| `frontend/src/pages/` | Páginas do terminal, contas, administração e laboratório. |
 | `frontend/src/components/` | Interface, barra lateral, gráficos e componentes reutilizáveis. |
 | `frontend/src/services/` | Consultas HTTP, validação de respostas e compartilhamento das requisições. |
 | `frontend/src/hooks/` e `frontend/src/context/` | Estado de consulta, atualização e integração com os componentes. |
@@ -56,7 +58,9 @@ O catálogo inclui Petrobras, Vale, Ibovespa, dólar USD/BRL, euro EUR/BRL, libr
 
 Os históricos são ordenados e deduplicados, sem preencher sessões ausentes ou inventar candles. A comparação usa apenas datas comuns e sobrepõe preços somente quando moeda e unidade coincidem. Datas iguais entre mercados não garantem fechamentos simultâneos.
 
-O serviço HTTP do frontend compartilha requisições em andamento e respostas por até 60 segundos. O panorama carregado permanece no contexto durante a navegação e pode ser atualizado manualmente. Não há autenticação, banco de dados, persistência funcional ou execução de operações financeiras.
+O serviço HTTP do frontend compartilha históricos em andamento e respostas por até 60 segundos. O panorama permanece no contexto durante a navegação, com atualização manual ou automática configurada no perfil. Cotações intradiárias têm controle próprio. O cache do backend evita coletas simultâneas repetidas; seus eventos e contadores são do processo, sem persistência. Falhas da fonte são propagadas, sem transformá-las silenciosamente em séries vazias.
+
+`AccountProvider` verifica a sessão ao iniciar. A API usa cookies HttpOnly com token aleatório cujo hash é armazenado no SQLite. Login e logout renovam/revogam a sessão; alteração de senha revoga outras sessões. Senhas usam PBKDF2-HMAC-SHA256 com sal. Endpoints pessoais validam sessão e endpoints administrativos verificam o papel no servidor. Mutações exigem cabeçalho específico, e CORS restringe a origem. O banco local padrão fica em `backend/data/`, ignorado pelo Git. Não há execução de operações financeiras. Veja [Tendências e contas](TENDENCIAS_E_CONTAS.md).
 
 O laboratório em `/graficos` mantém as séries locais simuladas separadas das consultas reais. Falhas da fonte são exibidas na interface e não são substituídas por dados artificiais. Os indicadores da barra lateral usam os mesmos históricos diários de um mês do panorama.
 
@@ -65,7 +69,8 @@ O laboratório em `/graficos` mantém as séries locais simuladas separadas das 
 O desenvolvimento continua disponível com Vite em `http://localhost:5173` e FastAPI em `http://127.0.0.1:8000`. Nesse modo, crie o `.env` da raiz a partir de `.env.example`:
 
 - `FRONTEND_ORIGIN` configura a origem única autorizada pelo CORS do backend.
-- `VITE_API_BASE_URL` define a base das consultas HTTP do frontend.
+- `API_PROXY_TARGET` define o destino do proxy Vite/preview; o navegador sempre usa a mesma origem (`/api`). A configuração antiga `VITE_API_BASE_URL=http://...` pode fornecer o destino na ausência dessa variável.
+- `BOLSA_DB_PATH` opcional altera o arquivo SQLite; `BOLSA_COOKIE_SECURE=true` habilita cookie Secure em hospedagem HTTPS.
 
 O Vite lê o `.env` da raiz por `envDir: '..'`. Variáveis `VITE_*` são públicas e incorporadas ao build. O Uvicorn carrega o arquivo com `--env-file ../.env`. Os comandos completos estão no README; essa configuração local não é necessária para a entrega Docker.
 

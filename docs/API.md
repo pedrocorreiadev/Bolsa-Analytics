@@ -1,6 +1,6 @@
 # API do Bolsa Analytics
 
-O backend FastAPI consulta a fonte já utilizada pelo projeto, Yahoo Finance via `yfinance`, e prepara séries OHLCV com Pandas. Não há autenticação, persistência ou execução de operações. A disponibilidade depende da fonte e da conectividade; as respostas não garantem dados em tempo real.
+O backend FastAPI consulta Yahoo Finance via `yfinance` e prepara séries OHLCV com Pandas. Inclui análise estatística, cotações intradiárias, contas/sessões persistidas em SQLite e endpoints administrativos protegidos. A disponibilidade depende da fonte e da conectividade; as respostas não garantem dados em tempo real. Não há execução de operações financeiras.
 
 ## Executar
 
@@ -63,7 +63,7 @@ Os controles da aplicação oferecem um subconjunto explícito das combinações
 | `1wk` — semanal | Todos, exceto `5d`. |
 | `1mo` — mensal | `3mo`, `6mo`, `1y`, `2y`, `5y`. |
 
-Intraday não é oferecido nesta versão. Uma combinação aceita pode não ter registros disponíveis na fonte para determinado instrumento.
+Este endpoint preserva candles diários ou superiores. Para intradiário, use `/api/quotes/{ativo}`. Uma combinação aceita pode não ter registros disponíveis na fonte para determinado instrumento.
 
 Exemplo de consulta, sem valores financeiros fictícios:
 
@@ -85,6 +85,10 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/assets/petrobras/history?perio
 | `source` | string | `Yahoo Finance / yfinance`. |
 | `count` | inteiro | Quantidade de candles válidos em `data`. |
 | `data` | array | Candles ordenados por data, sem duplicidades. |
+| `collected_at` | string | Instante UTC da coleta bem-sucedida em ISO 8601. |
+| `realtime` | boolean | `false`: não há garantia de tempo real. |
+| `quality` | objeto | `received`, `valid` e `discarded`: recebidos, válidos e descartados/duplicados. |
+| `cached` | boolean | Indica resposta do cache de até 60 segundos. |
 
 Cada item de `data` preserva os campos originais:
 
@@ -117,7 +121,46 @@ O provider limita cada chamada de histórico à fonte a dez segundos. A bibliote
 
 ## CORS
 
-`FRONTEND_ORIGIN` no `.env` da raiz define a origem autorizada, por padrão `http://localhost:5173`. A configuração permite `GET`, sem credenciais. `localhost` e `127.0.0.1` são origens diferentes para o navegador. Reinicie o backend ao mudar a configuração.
+`FRONTEND_ORIGIN` no `.env` da raiz define a origem autorizada, por padrão `http://localhost:5173`. Permite credenciais, métodos `GET`, `POST`, `PATCH`, `PUT` e cabeçalhos `Content-Type` e `X-Bolsa-Client`. `localhost` e `127.0.0.1` são origens diferentes. O frontend usa o proxy de mesma origem do Vite/Nginx. Reinicie o backend ao mudar a configuração.
+
+## `GET /api/analysis/{ativo}`
+
+| Parâmetro | Padrão | Regra |
+| --- | --- | --- |
+| `period` | `3mo` | Mesmo conjunto dos históricos; o intervalo é sempre diário. |
+| `short` | `5` | Média móvel curta, de 2 a 199 observações. |
+| `long` | `20` | Média longa, de 3 a 200; deve superar `short`. |
+| `horizon` | `10` | De 1 a 20 observações futuras; a interface oferece 5, 10 e 20. |
+| `start`, `end` | ausentes | Datas inclusivas `YYYY-MM-DD`, recortando o período consultado. |
+| `benchmark` | ausente | id de outro ativo para correlação dos retornos. |
+
+Requer pelo menos `max(10, long)` fechamentos positivos. Retorna identificação do ativo, `direcao` (`alta`, `baixa`, `lateral`, `mista`), `observacoes`, `inicio`, `fim`, janelas/horizonte, `estatisticas`, `serie`, `projecoes`, `correlacao`, `explicacao`, `avisos`, `qualidade`, `coletado_em` e `em_cache`. `tempo_real` é `false`.
+
+`serie` contém `data`, `fechamento`, `media_curta`, `media_longa` e `ajuste`; médias sem janela completa são null. Cada projeção contém `passo`, `estimativa`, `inferior`, `superior`. `correlacao` inclui `ativo`, `valor` (null se não calculável), `pares` e `motivo`. Uma falha apenas na referência preserva a análise e informa o motivo. HTTP 400: filtros incompatíveis; 404: ativo/registro ausente; 422: dados ou parâmetros insuficientes/inválidos; 502: falha na fonte. A [metodologia completa](TENDENCIAS_E_CONTAS.md#algoritmo-em-português) descreve os limites das projeções.
+
+## `GET /api/quotes/{ativo}`
+
+Consulta um dia de candles de um minuto. Retorna `asset`, `ticker`, `name`, `currency`, `unit`, `timezone`, `source`, `interval`, `collected_at`, `as_of`, `count`, `quality`, `cached` e `data`. Cada ponto inclui `time` (ISO 8601 com fuso), `open`, `high`, `low`, `close`. `as_of` é a abertura do último candle recebido; `realtime` é `false`. Timestamp de coleta e timestamp do candle são distintos. A disponibilidade intradiária varia entre ativos e sessões. Erros usam 404 ou 502 conforme o histórico.
+
+## Contas e autorização
+
+Todas as mutações abaixo exigem o cabeçalho `X-Bolsa-Client: web`. O cookie `bolsa_sessao` é enviado pelo navegador com `credentials: include`. Não há token no corpo das respostas. As respostas de usuário incluem `id`, `nome`, `email`, `papel`, `criado_em` e `preferencias`.
+
+| Método e rota | Corpo / resultado |
+| --- | --- |
+| `POST /api/auth/register` | `{nome, email, senha}`; 201 com usuário e cookie. Senha de 10–128 caracteres, nome de 2–80. Papel público sempre `usuario`. |
+| `POST /api/auth/login` | `{email, senha}`; usuário e sessão de 12 horas. |
+| `GET /api/auth/me` | Sessão obrigatória; usuário atual, `Cache-Control: no-store`. |
+| `POST /api/auth/logout` | Revoga sessão, remove cookie, 204. |
+| `PATCH /api/auth/profile` | Sessão obrigatória; `{nome}`; retorna usuário atualizado. |
+| `PUT /api/auth/preferences` | Sessão obrigatória; `{ativo, periodo, horizonte, atualizacao, favoritos}`; retorna usuário atualizado. |
+| `POST /api/auth/password` | Sessão obrigatória; `{senha_atual, nova_senha}`; 204, revoga outras sessões. |
+| `GET /api/admin/dashboard` | Apenas admin; usuários sem hashes/sessões, totais e `coleta` com métricas e eventos. |
+| `POST /api/admin/cache/clear` | Apenas admin; invalida cache do processo, 204. |
+
+Preferências: `ativo` e `favoritos` usam o catálogo; `periodo` aceita períodos exceto `5d`; `horizonte`: 5, 10 ou 20; `atualizacao`: 0, 60 ou 300 segundos. Contas/preferências persistem em SQLite. Sessão ausente/expirada retorna 401, papel inadequado ou cabeçalho ausente retorna 403, e-mail duplicado retorna 409, validação retorna 422 e excesso de tentativas retorna 429 com `Retry-After`. O cadastro não aceita campos extras de papel ou permissões.
+
+A criação do primeiro administrador é feita pelo [comando local](TENDENCIAS_E_CONTAS.md#criar-o-administrador), sem senha padrão. Em HTTPS, configure `BOLSA_COOKIE_SECURE=true`.
 
 ## Verificar sem rede
 
