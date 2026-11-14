@@ -1,11 +1,14 @@
-import { useEffect, useRef, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import {
-  createChart, CandlestickSeries, LineSeries, HistogramSeries, ColorType, CrosshairMode,
+  createChart, LineSeries, HistogramSeries, ColorType, CrosshairMode,
   type IChartApi, type ISeriesApi, type SeriesType, type Time,
 } from "lightweight-charts";
 import type { MarketHistory, OHLCVPoint } from "../types/market";
 import { formatMarketDate, formatMarketValue } from "../utils/formatMarket";
+import { CHART_COLORS } from "../utils/chartTheme";
+import SlenderCandles from "./charts/SlenderCandles";
 import "../styles/candles.css";
+import "../styles/market-chart.css";
 
 type MarketChartProps = {
   history: MarketHistory;
@@ -31,13 +34,25 @@ function dateKey(time: Time): string {
 }
 
 export default function MarketChart({ history, mode = "candles", compact = false, syncId, height }: MarketChartProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const announcementRef = useRef<HTMLParagraphElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const selectionRef = useRef(0);
   const selectPointRef = useRef<((index: number) => void) | null>(null);
+  const clearSelectionRef = useRef<(() => void) | null>(null);
+  const gridVisibleRef = useRef(true);
+  const [gridVisible, setGridVisible] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
+  const helpId = useId();
   const hasVolume = history.data.some((point) => point.volume !== null);
+
+  useEffect(() => {
+    const updateFullscreen = () => setFullscreen(document.fullscreenElement === rootRef.current);
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreen);
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -48,62 +63,80 @@ export default function MarketChart({ history, mode = "candles", compact = false
       width: Math.max(container.clientWidth, 1),
       height: container.clientHeight || (compact ? 320 : 480),
       layout: {
-        background: { type: ColorType.Solid, color: "#0c0e11" },
-        textColor: "#989fa9", fontFamily: '"Cascadia Code", Consolas, monospace', fontSize: 11,
+        background: { type: ColorType.Solid, color: CHART_COLORS.background },
+        textColor: CHART_COLORS.text, fontFamily: '"Segoe UI", system-ui, sans-serif', fontSize: 11,
         attributionLogo: true,
-        panes: { separatorColor: "#292d34", separatorHoverColor: "#675333", enableResize: true },
+        panes: { separatorColor: CHART_COLORS.border, separatorHoverColor: "#4b5972", enableResize: true },
       },
-      grid: { vertLines: { color: "#1c2026" }, horzLines: { color: "#1c2026" } },
+      grid: {
+        vertLines: { color: CHART_COLORS.grid, visible: gridVisibleRef.current },
+        horzLines: { color: CHART_COLORS.grid, visible: gridVisibleRef.current },
+      },
       crosshair: {
-        mode: CrosshairMode.Normal,
-        vertLine: { color: "#858d98", labelBackgroundColor: "#414750" },
-        horzLine: { color: "#858d98", labelBackgroundColor: "#414750" },
+        mode: CrosshairMode.Magnet,
+        vertLine: { color: "#69758b", labelBackgroundColor: "#34415a", width: 1, style: 2 },
+        horzLine: { color: "#69758b", labelBackgroundColor: "#34415a", width: 1, style: 2 },
       },
-      rightPriceScale: { borderColor: "#30353e", scaleMargins: { top: 0.1, bottom: 0.08 }, minimumWidth: compact ? 68 : 84 },
-      timeScale: { borderColor: "#30353e", timeVisible: false, secondsVisible: false, rightOffset: 2, minBarSpacing: 2 },
+      rightPriceScale: { borderColor: CHART_COLORS.border, scaleMargins: { top: 0.12, bottom: 0.1 }, minimumWidth: compact ? 68 : 80 },
+      timeScale: { borderColor: CHART_COLORS.border, timeVisible: false, secondsVisible: false, rightOffset: 4, minBarSpacing: 2, barSpacing: 9, lockVisibleTimeRangeOnResize: true },
       localization: {
         locale: "pt-BR",
-        priceFormatter: (value: number) => value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: history.asset === "dolar" ? 4 : 2 }),
+        priceFormatter: (value: number) => value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: history.unit === "currency" && Math.abs(value) < 10 ? 4 : 2 }),
         timeFormatter: (time: Time) => formatMarketDate(dateKey(time)),
       },
-      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScroll: { mouseWheel: false, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
       handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true },
     });
     chartRef.current = chart;
 
-    const precision = history.asset === "dolar" ? 4 : 2;
+    const precision = history.unit === "currency" && history.data.some((point) => Math.abs(point.close) < 10) ? 4 : 2;
     const priceFormat = { type: "price" as const, precision, minMove: 10 ** -precision };
     let mainSeries: ISeriesApi<SeriesType>;
     if (mode === "line") {
-      const series = chart.addSeries(LineSeries, { color: "#e9a748", lineWidth: 2, priceFormat, lastValueVisible: true, crosshairMarkerVisible: true });
+      const series = chart.addSeries(LineSeries, {
+        color: CHART_COLORS.primary, lineWidth: 2, priceFormat, lastValueVisible: true,
+        crosshairMarkerVisible: true, crosshairMarkerRadius: 4,
+        crosshairMarkerBorderColor: CHART_COLORS.primary, crosshairMarkerBackgroundColor: CHART_COLORS.background,
+        priceLineColor: CHART_COLORS.primary, priceLineWidth: 1, priceLineStyle: 2,
+      });
       series.setData(history.data.map((point) => ({ time: point.date, value: point.close })));
       mainSeries = series;
     } else {
-      const series = chart.addSeries(CandlestickSeries, {
-        upColor: "#64cc9a", downColor: "#f38282", wickUpColor: "#64cc9a", wickDownColor: "#f38282",
-        borderVisible: false, priceFormat,
+      const series = chart.addCustomSeries(new SlenderCandles(), {
+        priceFormat, priceLineWidth: 1, priceLineStyle: 2,
       });
-      series.setData(history.data.map((point) => ({ time: point.date, open: point.open, high: point.high, low: point.low, close: point.close })));
+      series.setData(history.data.map((point) => ({
+        time: point.date, open: point.open, high: point.high, low: point.low, close: point.close,
+        color: point.close >= point.open ? CHART_COLORS.up : CHART_COLORS.down,
+      })));
       mainSeries = series;
     }
     if (hasVolume) {
       const volume = chart.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceLineVisible: false, lastValueVisible: false }, 1);
       volume.setData(history.data.map((point) => point.volume === null
         ? { time: point.date }
-        : { time: point.date, value: point.volume, color: point.close >= point.open ? "#387453" : "#925050" }));
+        : { time: point.date, value: point.volume, color: point.close >= point.open ? CHART_COLORS.volumeUp : CHART_COLORS.volumeDown }));
       chart.panes()[1]?.setHeight(compact ? 75 : 100);
+      volume.priceScale().applyOptions({ scaleMargins: { top: 0.15, bottom: 0 }, borderVisible: false });
     }
 
     const points = new Map(history.data.map((point) => [point.date, point]));
+    const pointIndexes = new Map(history.data.map((point, index) => [point.date, index]));
+    const numberFormatter = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: precision });
     const showPoint = (point: OHLCVPoint | null) => {
       const chosen = point ?? history.data.at(-1);
       if (!chosen) return;
+      selectionRef.current = pointIndexes.get(chosen.date) ?? history.data.length - 1;
+      const change = chosen.close - chosen.open;
+      const changePercent = chosen.open === 0 ? null : (change / chosen.open) * 100;
+      const sign = change >= 0 ? "+" : "";
       const values = [
-        ["Sessão", formatMarketDate(chosen.date)],
-        ["Abertura", formatMarketValue(chosen.open, history.currency, history.unit)],
-        ["Máxima", formatMarketValue(chosen.high, history.currency, history.unit)],
-        ["Mínima", formatMarketValue(chosen.low, history.currency, history.unit)],
-        ["Fechamento", formatMarketValue(chosen.close, history.currency, history.unit)],
+        [point ? "Sessão selecionada" : "Última sessão", formatMarketDate(chosen.date)],
+        ["Abertura", numberFormatter.format(chosen.open)],
+        ["Máxima", numberFormatter.format(chosen.high)],
+        ["Mínima", numberFormatter.format(chosen.low)],
+        ["Fechamento", numberFormatter.format(chosen.close)],
+        ["Variação A → F", `${sign}${numberFormatter.format(change)}${changePercent === null ? "" : ` (${sign}${changePercent.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`}`],
         ["Volume", chosen.volume === null ? "Não informado" : chosen.volume.toLocaleString("pt-BR")],
       ];
       const fragment = document.createDocumentFragment();
@@ -118,8 +151,9 @@ export default function MarketChart({ history, mode = "candles", compact = false
       }
       tooltip.replaceChildren(fragment);
       tooltip.dataset.active = point ? "true" : "false";
+      tooltip.dataset.direction = change >= 0 ? "up" : "down";
     };
-    showPoint(history.data.at(-1) ?? null);
+    showPoint(null);
     selectionRef.current = history.data.length - 1;
 
     const peer: Peer = { chart, series: mainSeries, points, showPoint };
@@ -145,7 +179,7 @@ export default function MarketChart({ history, mode = "candles", compact = false
       if (synchronizing) return;
       const point = event.time === undefined ? null : points.get(dateKey(event.time)) ?? null;
       showPoint(point);
-      if (point) selectionRef.current = history.data.findIndex((item) => item.date === point.date);
+      if (point) selectionRef.current = pointIndexes.get(point.date) ?? selectionRef.current;
       synchronizeCrosshair(event.time);
     };
     const rangeHandler: Parameters<ReturnType<IChartApi["timeScale"]>["subscribeVisibleTimeRangeChange"]>[0] = (range) => {
@@ -162,6 +196,14 @@ export default function MarketChart({ history, mode = "candles", compact = false
     chart.subscribeCrosshairMove(crosshairHandler);
     chart.timeScale().subscribeVisibleTimeRangeChange(rangeHandler);
     chart.timeScale().fitContent();
+
+    clearSelectionRef.current = () => {
+      chart.clearCrosshairPosition();
+      showPoint(null);
+      if (announcementRef.current) announcementRef.current.textContent = "";
+      selectionRef.current = history.data.length - 1;
+      synchronizeCrosshair(undefined);
+    };
 
     selectPointRef.current = (index: number) => {
       const bounded = Math.max(0, Math.min(history.data.length - 1, index));
@@ -194,10 +236,33 @@ export default function MarketChart({ history, mode = "candles", compact = false
         if (group?.size === 0) chartGroups.delete(syncId);
       }
       selectPointRef.current = null;
+      clearSelectionRef.current = null;
       chartRef.current = null;
       chart.remove();
     };
   }, [history, mode, compact, syncId, hasVolume]);
+
+  function fitChart() {
+    for (const pane of chartRef.current?.panes() ?? []) pane.priceScale("right").applyOptions({ autoScale: true });
+    chartRef.current?.timeScale().fitContent();
+    clearSelectionRef.current?.();
+  }
+
+  function toggleGrid() {
+    const visible = !gridVisibleRef.current;
+    gridVisibleRef.current = visible;
+    setGridVisible(visible);
+    chartRef.current?.applyOptions({ grid: { vertLines: { visible }, horzLines: { visible } } });
+  }
+
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement === rootRef.current) await document.exitFullscreen();
+      else await rootRef.current?.requestFullscreen();
+    } catch {
+      if (announcementRef.current) announcementRef.current.textContent = "Não foi possível abrir a tela cheia neste navegador.";
+    }
+  }
 
   function zoom(factor: number) {
     const chart = chartRef.current;
@@ -224,21 +289,27 @@ export default function MarketChart({ history, mode = "candles", compact = false
       else selectPointRef.current?.(selectionRef.current + direction);
     } else if (event.key === "+" || event.key === "=") { event.preventDefault(); zoom(0.7); }
     else if (event.key === "-") { event.preventDefault(); zoom(1.4); }
-    else if (event.key === "0" || event.key === "Home") { event.preventDefault(); chartRef.current?.timeScale().fitContent(); }
+    else if (event.key === "0" || event.key === "Home") { event.preventDefault(); fitChart(); }
+    else if (event.key === "End") { event.preventDefault(); selectPointRef.current?.(history.data.length - 1); }
+    else if (event.key === "Escape") { clearSelectionRef.current?.(); }
   }
 
   if (history.data.length === 0) return <div className="state-message" role="status">Nenhum registro OHLC disponível.</div>;
 
   return (
-    <div className={`market-chart ${compact ? "market-chart-compact" : ""}`}>
+    <div ref={rootRef} className={`market-chart financial-chart ${compact ? "market-chart-compact" : ""}`}>
       <div className="market-chart-tools" role="group" aria-label={`Controles do gráfico ${history.ticker}`}>
-        <span>{mode === "candles" ? "Candles OHLC" : "Linha de fechamento"}{hasVolume ? " + volume" : ""}</span>
-        <div>
-          <button type="button" onClick={() => pan(-1)} aria-label="Deslocar gráfico para a esquerda">←</button>
-          <button type="button" onClick={() => pan(1)} aria-label="Deslocar gráfico para a direita">→</button>
-          <button type="button" onClick={() => zoom(0.7)} aria-label="Aproximar gráfico">+</button>
-          <button type="button" onClick={() => zoom(1.4)} aria-label="Afastar gráfico">−</button>
-          <button type="button" onClick={() => chartRef.current?.timeScale().fitContent()}>Ajustar</button>
+        <span className="chart-instrument"><strong>{history.ticker}</strong><span>{mode === "candles" ? "Candles" : "Fechamento"}</span><span className="chart-unit">{history.unit === "points" ? "Pontos" : history.currency}</span></span>
+        <div className="chart-tool-actions">
+          <button type="button" onClick={() => pan(-1)} aria-label="Deslocar gráfico para a esquerda" title="Deslocar para a esquerda (Shift + ←)">←</button>
+          <button type="button" onClick={() => pan(1)} aria-label="Deslocar gráfico para a direita" title="Deslocar para a direita (Shift + →)">→</button>
+          <span className="chart-tool-divider" aria-hidden="true" />
+          <button type="button" onClick={() => zoom(0.7)} aria-label="Aproximar gráfico" title="Aproximar (+)">+</button>
+          <button type="button" onClick={() => zoom(1.4)} aria-label="Afastar gráfico" title="Afastar (−)">−</button>
+          <button type="button" onClick={fitChart} title="Ajustar todo o histórico (0)">Ajustar</button>
+          <span className="chart-tool-divider" aria-hidden="true" />
+          <button type="button" onClick={toggleGrid} aria-pressed={gridVisible} title={gridVisible ? "Ocultar grade do gráfico" : "Mostrar grade do gráfico"}>Grade</button>
+          <button type="button" onClick={toggleFullscreen} aria-pressed={fullscreen} disabled={!document.fullscreenEnabled} title={fullscreen ? "Sair da tela cheia (Esc)" : "Abrir gráfico em tela cheia"}>{fullscreen ? "Sair" : "Tela cheia"}</button>
         </div>
       </div>
       <div ref={tooltipRef} className="ohlc-tooltip mono" aria-label="Valores da sessão sob o cursor" />
@@ -249,10 +320,15 @@ export default function MarketChart({ history, mode = "candles", compact = false
         style={height === undefined ? undefined : { height }}
         tabIndex={0}
         role="group"
+        aria-describedby={helpId}
         aria-label={`Gráfico de ${history.ticker}. Setas percorrem as sessões; Shift e setas deslocam a janela; mais e menos ajustam zoom; zero ajusta todo o histórico.`}
         onKeyDown={handleKey}
       />
-      <div className="market-chart-help"><span>Arraste para deslocar · rolagem ou pinça para zoom</span><span>Teclado: ← → · + − · 0</span></div>
+      <div className="chart-direction-legend" aria-label="Legenda do gráfico">
+        {mode === "candles" ? <><span><i className="chart-key chart-key-up" aria-hidden="true" />Alta <small>fechamento ≥ abertura</small></span><span><i className="chart-key chart-key-down" aria-hidden="true" />Baixa <small>fechamento &lt; abertura</small></span></> : <span><i className="chart-key chart-key-line" aria-hidden="true" />Preço de fechamento</span>}
+        {hasVolume && <span className="chart-volume-label">Volume no painel inferior</span>}
+      </div>
+      <div id={helpId} className="market-chart-help"><span>Arraste para navegar · role ou use pinça para zoom</span><span>Teclado: ← → sessões · + − zoom · 0 ajustar</span></div>
       <div className="chart-attribution">TradingView Lightweight Charts™ · Copyright © 2025 <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView, Inc.</a></div>
       {!hasVolume && <p className="volume-unavailable">Volume não informado pela fonte para esta série.</p>}
     </div>

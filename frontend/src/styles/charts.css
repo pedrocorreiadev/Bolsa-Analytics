@@ -4,10 +4,13 @@
 }
 
 .price-chart,
-.comparison-chart {
+.comparison-chart,
+.relative-comparison-chart {
   width: 100%;
   min-width: 0;
   font-family: var(--mono, "SFMono-Regular", Consolas, monospace);
+  background: #131722;
+  font-variant-numeric: tabular-nums;
 }
 
 .chart-legend {
@@ -16,8 +19,9 @@
   flex-wrap: wrap;
   gap: 12px 22px;
   padding: 12px 18px;
-  border-top: 1px solid var(--border, #282c33);
-  color: var(--muted, #969da8);
+  border-top: 1px solid #2a3040;
+  background: #131722;
+  color: #a6b0c0;
   font-size: 11px;
 }
 
@@ -39,9 +43,23 @@
   border-top: 2px solid;
 }
 
-.series-primary { border-color: #e7a84b; }
-.series-average { border-color: #838c99; border-top-style: dashed; }
-.series-secondary { border-color: #8da9d9; border-top-style: dashed; }
+.series-primary { border-color: #4b9bff; }
+.series-average { border-color: #7e8ba1; border-top-style: dashed; }
+.series-secondary { border-color: #f5a623; border-top-style: dashed; }
+
+.price-chart .recharts-surface:focus-visible,
+.comparison-chart .recharts-surface:focus-visible,
+.relative-comparison-chart .recharts-surface:focus-visible {
+  outline-color: #4b9bff;
+  outline-offset: -3px;
+}
+
+.price-chart .recharts-tooltip-wrapper,
+.comparison-chart .recharts-tooltip-wrapper,
+.relative-comparison-chart .recharts-tooltip-wrapper {
+  max-width: calc(100% - 16px);
+  z-index: 2;
+}
 
 .indicator-list { margin: 0; padding: 0 16px; }
 .indicator-list > div {

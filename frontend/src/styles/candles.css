@@ -1,68 +1,95 @@
-.candles-page { min-width: 0; }
-.candle-controls-panel { margin-bottom: 14px; }
-.candle-controls { padding: 16px; display: grid; grid-template-columns: minmax(180px, 1.6fr) minmax(120px, 1fr) minmax(130px, 1fr) auto; gap: 16px; align-items: end; }
+.candles-page { --green: #14b88b; --red: #f45b69; min-width: 0; }
+.terminal-v2 .candles-page .panel { border-radius: 2px; }
+.candle-controls-panel { margin-bottom: 16px; }
+.candle-controls-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); background: #121315; }
+.candle-controls-heading > span:first-child { display: inline-flex; align-items: center; gap: 8px; color: var(--amber); font-family: var(--mono); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+.candle-controls-heading svg { color: var(--amber); }
+.candle-history-badge { padding: 3px 7px; border: 1px solid #34373d; border-radius: 2px; color: var(--muted); background: #17191c; font-size: 9px; }
+.candle-controls { padding: 14px 16px; display: grid; grid-template-columns: minmax(180px, 1.8fr) minmax(130px, 1fr) minmax(185px, 1fr); gap: 16px; align-items: end; }
 .candle-controls .field { min-width: 0; }
-.candle-controls label { display: block; color: var(--muted); font-size: 10px; margin-bottom: 7px; }
-.candle-controls select { width: 100%; min-width: 0; }
-.candle-frequency-note { display: grid; gap: 7px; padding-bottom: 9px; color: var(--muted); font-size: 10px; }
-.candle-frequency-note .eyebrow { font-size: 9px; }
-.candle-state { min-height: 350px; }
-.candle-quote { display: flex; justify-content: space-between; gap: 20px; padding: 18px; }
-.candle-quote h3 { margin: 5px 0; font-size: 18px; font-weight: 600; }
-.candle-quote p { font-size: 10px; }
-.candle-last-value { display: grid; gap: 5px; text-align: right; }
-.candle-last-value > strong { font-size: 26px; font-weight: 500; letter-spacing: -.7px; }
-.candle-last-value > span { font-size: 12px; }
+.candle-controls label, .candle-field-label { display: block; color: var(--muted); font-family: var(--mono); font-size: 10px; margin-bottom: 7px; }
+.terminal-v2 .candle-controls .field label { font-size: 10px; }
+.terminal-v2 .candle-controls select { width: 100%; min-width: 0; min-height: 40px; padding: 9px 11px; border-color: #363940; border-radius: 2px; background: #101113; font-size: 11px; }
+.terminal-v2 .candle-controls select:hover { border-color: #686e77; }
+.candles-page button:focus-visible, .candles-page select:focus-visible { outline-color: var(--amber); }
+.candle-mode-control { display: flex; min-height: 40px; padding: 3px; gap: 3px; background: #101113; border: 1px solid #363940; border-radius: 2px; }
+.terminal-v2 .candle-mode-control button { display: inline-flex; align-items: center; justify-content: center; flex: 1; gap: 6px; min-width: 0; padding: 6px 10px; border: 1px solid transparent; border-radius: 1px; background: transparent; color: #a5acb7; font-size: 11px; }
+.terminal-v2 .candle-mode-control button:hover { color: #e0e3e8; background: #1c1e22; }
+.terminal-v2 .candle-mode-control button[aria-pressed="true"] { background: #241c13; border-color: #75522c; color: var(--amber); }
+.candle-period-bar { display: flex; align-items: center; gap: 16px; padding: 8px 16px; border-top: 1px solid var(--border); background: #101113; }
+.candle-period-bar > span:first-child { color: var(--muted); font-family: var(--mono); font-size: 10px; }
+.candle-period-control { display: flex; flex-wrap: wrap; gap: 4px; }
+.terminal-v2 .candle-period-control button { min-height: 34px; min-width: 41px; padding: 7px 10px; border: 1px solid transparent; border-radius: 2px; background: transparent; color: #a5acb7; font-size: 11px; font-weight: 500; }
+.terminal-v2 .candle-period-control button:hover { color: #e0e3e8; background: #1c1e22; }
+.terminal-v2 .candle-period-control button[aria-pressed="true"] { background: #241c13; border-color: #75522c; color: var(--amber); }
+.candle-period-description { margin-left: auto; color: var(--muted); font-size: 10px; white-space: nowrap; }
+.candle-state { min-height: 480px; background: var(--panel); }
+.candle-loading-symbol { height: 52px; display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+.candle-loading-symbol i { position: relative; width: 9px; height: 22px; border-radius: 1px; background: #089981; }
+.candle-loading-symbol i::after { content: ""; position: absolute; left: 4px; top: -6px; bottom: -6px; width: 1px; background: inherit; }
+.candle-loading-symbol i:nth-child(2) { height: 16px; margin-top: 15px; background: #f23645; }
+.candle-loading-symbol i:nth-child(3) { height: 31px; margin-top: -6px; }
+.candle-loading-symbol i:nth-child(4) { height: 19px; margin-top: 3px; background: #f23645; }
+.candle-loading-symbol i:nth-child(5) { height: 25px; margin-top: -15px; }
+.terminal-v2 .candle-main-panel > .panel-header { min-height: 42px; padding: 9px 16px; background: #121315; }
+.terminal-v2 .candle-main-panel > .panel-header h2 { color: var(--amber); font-family: var(--mono); font-size: 10px; letter-spacing: .6px; text-transform: uppercase; }
+.terminal-v2 .candle-main-panel .panel-symbol { color: var(--muted); font-size: 10px; }
+.terminal-v2 .candle-refresh { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 5px 8px; border: 1px solid #3a3e46; border-radius: 2px; background: #191b1e; color: #b8bec8; font-size: 10px; }
+.terminal-v2 .candle-refresh:hover { color: var(--amber); border-color: #8f6a3e; background: #211b14; }
+.candle-quote { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 20px 18px; background: var(--panel); }
+.candle-instrument { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.candle-symbol-badge { display: grid; place-items: center; flex-shrink: 0; min-width: 62px; height: 58px; padding: 0 8px; border: 1px solid #5b442a; border-radius: 2px; background: #1d1812; color: var(--amber); font-size: 12px; font-weight: 600; }
+.candle-quote .eyebrow { color: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: 1px; }
+.candle-quote h3 { margin: 6px 0; color: #e6e9ed; font-family: var(--mono); font-size: 20px; font-weight: 500; letter-spacing: -.4px; }
+.candle-quote p { font-size: 10px; line-height: 1.6; }
+.candle-last-value { display: grid; justify-items: end; gap: 6px; text-align: right; }
+.candle-last-value > .candle-price-label { color: var(--muted); font-family: var(--mono); font-size: 10px; }
+.candle-last-value > strong { color: #edf0f4; font-size: 32px; font-weight: 600; letter-spacing: -1.1px; line-height: 1.2; }
+.candle-last-value > .candle-change { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; }
 .candle-last-value small { font-size: 10px; }
-.candle-last-value > span small { color: var(--muted); font-family: "Segoe UI", system-ui, sans-serif; }
+.candle-last-value > span small { color: var(--muted); font-family: var(--mono); margin-left: 3px; }
+.candle-range { display: flex; align-items: center; gap: 16px; padding: 0 20px 18px; background: var(--panel); }
+.candle-range > span { display: grid; gap: 5px; flex-shrink: 0; }
+.candle-range > span:last-child { text-align: right; }
+.candle-range small { color: var(--muted); font-family: var(--mono); font-size: 10px; }
+.candle-range strong { color: #c8cdd5; font-size: 11px; font-weight: 400; }
+.candle-range-track { position: relative; flex: 1; height: 3px; border-radius: 2px; background: #34373d; margin: 0 6px; }
+.candle-range-track > span { position: absolute; top: 50%; width: 9px; height: 9px; border: 2px solid var(--panel); border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 1px var(--amber); transform: translate(-50%, -50%); }
 .candle-data-note { color: var(--amber); font-size: 11px; line-height: 1.5; padding: 10px 18px; border-top: 1px solid var(--border); }
-.market-chart { min-width: 0; }
-.market-chart-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 14px; border-block: 1px solid var(--border); }
-.market-chart-tools > span { color: var(--muted); font-size: 10px; }
-.market-chart-tools > div { display: flex; gap: 4px; }
-.market-chart-tools button { min-width: 31px; min-height: 29px; padding: 4px 8px; border: 1px solid #3b414a; background: #171a20; color: #d6dbe3; font: 11px var(--mono); border-radius: 2px; }
-.market-chart-tools button:hover { border-color: #8b6537; color: var(--amber); }
-.ohlc-tooltip { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 22px; min-height: 53px; padding: 9px 14px; background: #101317; border-bottom: 1px solid #20252c; }
-.ohlc-tooltip > span { display: grid; gap: 3px; }
-.ohlc-tooltip small { font-family: "Segoe UI", system-ui, sans-serif; font-size: 9px; color: var(--muted); }
-.ohlc-tooltip strong { font-size: 11px; font-weight: 400; color: #dce0e6; }
-.ohlc-tooltip[data-active="true"] > span:first-child strong { color: var(--amber); }
-.market-chart-surface { width: 100%; height: 480px; min-width: 0; position: relative; }
-.market-chart-surface:focus-visible { outline-offset: -3px; }
-.market-chart-compact .market-chart-surface { height: 320px; }
-.market-chart-compact .ohlc-tooltip { gap: 9px 14px; }
-.market-chart-compact .ohlc-tooltip strong { font-size: 10px; }
-.market-chart-help { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 10px 14px; color: var(--muted); font-size: 9px; border-top: 1px solid #20252c; }
-.volume-unavailable { color: var(--muted); font-size: 10px; padding: 0 14px 10px; }
-.chart-attribution { padding: 0 14px 9px; font-size: 8px; color: var(--muted); }
-.chart-attribution a { text-decoration: underline; }
-.candle-summary { margin-top: 14px; }
+.candle-summary { margin-top: 16px; background: var(--panel); }
 .candle-summary dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
 .candle-summary dl > div { padding: 14px 18px; border-right: 1px solid var(--border); }
 .candle-summary dl > div:last-child { border-right: 0; }
-.candle-summary dt { font-size: 10px; color: var(--muted); margin-bottom: 7px; }
-.candle-summary dd { margin: 0; font-size: 13px; }
+.candle-summary dt { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 9px; }
+.candle-summary dd { margin: 0; color: #dce0e5; font-size: 13px; overflow-wrap: anywhere; }
 .candle-source-note { color: var(--muted); font-size: 10px; line-height: 1.7; padding: 14px 2px; }
 @media (max-width: 1050px) {
-  .candle-controls { grid-template-columns: minmax(160px, 1.6fr) minmax(110px, 1fr) minmax(130px, 1fr); }
-  .candle-frequency-note { display: none; }
-  .ohlc-tooltip { gap: 10px 16px; }
+  .candle-controls { grid-template-columns: minmax(160px, 1.4fr) minmax(100px, .8fr) minmax(160px, 1fr); gap: 12px; }
+  .candle-period-description { display: none; }
 }
 @media (max-width: 650px) {
-  .candle-controls { padding: 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+  .candle-controls-heading { padding: 11px 13px; }
+  .candle-controls-heading > span:first-child { font-size: 9px; }
+  .candle-history-badge { font-size: 9px; }
+  .candle-controls { padding: 14px 13px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 10px; }
   .candle-asset-field { grid-column: 1 / -1; }
-  .candle-controls select { min-height: 39px; }
-  .candle-quote { padding: 15px 13px; flex-direction: column; gap: 13px; }
-  .candle-quote h3 { font-size: 16px; }
-  .candle-last-value { text-align: left; }
-  .candle-last-value > strong { font-size: 25px; }
-  .market-chart-tools { align-items: start; flex-direction: column; gap: 8px; padding: 10px 12px; }
-  .market-chart-tools button { min-width: 37px; min-height: 34px; }
-  .ohlc-tooltip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding-inline: 12px; gap: 10px; }
-  .ohlc-tooltip strong { font-size: 10px; overflow-wrap: anywhere; }
-  .market-chart-surface { height: 400px; }
-  .market-chart-compact .market-chart-surface { height: 310px; }
-  .market-chart-help { padding-inline: 12px; line-height: 1.5; }
+  .terminal-v2 .candle-controls select, .candle-mode-control { min-height: 42px; }
+  .terminal-v2 .candle-mode-control button { padding-inline: 6px; font-size: 10px; gap: 4px; }
+  .candle-mode-control svg { width: 13px; }
+  .candle-period-bar { gap: 10px; padding: 9px 13px; flex-wrap: wrap; }
+  .candle-period-control { flex: 1; gap: 2px; }
+  .terminal-v2 .candle-period-control button { min-width: 33px; min-height: 40px; padding: 7px; flex: 1; }
+  .candle-period-bar > span:first-child { width: 100%; }
+  .terminal-v2 .candle-main-panel > .panel-header { padding-inline: 13px; }
+  .terminal-v2 .candle-main-panel > .panel-header h2 { font-size: 11px; }
+  .candle-quote { padding: 20px 15px; flex-direction: column; align-items: flex-start; gap: 22px; }
+  .candle-quote h3 { font-size: 19px; }
+  .candle-symbol-badge { min-width: 55px; height: 52px; font-size: 11px; }
+  .candle-last-value { text-align: left; justify-items: start; }
+  .candle-last-value > strong { font-size: 30px; }
+  .candle-range { padding: 0 15px 20px; gap: 10px; }
+  .candle-range small { font-size: 9px; }
+  .candle-range strong { font-size: 10px; }
   .candle-summary dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .candle-summary dl > div { padding: 13px; }
   .candle-summary dl > div:nth-child(2) { border-right: 0; }

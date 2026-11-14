@@ -68,6 +68,10 @@ Se a porta 8081 estiver ocupada, crie ou edite um `.env` na raiz com `BOLSA_PORT
 
 Seleções ficam na URL, por exemplo `/candles?ativo=petrobras&periodo=3mo&intervalo=1wk` e `/comparacao?primeiro=petrobras&segundo=vale&periodo=1mo&intervalo=1d`. A comparação usa apenas as datas presentes nos dois históricos, sem preencher lacunas. Preços só são sobrepostos quando moeda e unidade coincidem. Cada mercado mantém seu calendário/fuso; datas iguais não significam fechamentos simultâneos.
 
+Os gráficos adotam fundo grafite, candles verdes (`#089981`) e vermelhos (`#f23645`), volume com as mesmas cores e linhas de fechamento azuis. Em `/graficos` e `/candles`, os botões de período e de visualização permitem alternar entre linha e candles; a seleção é compartilhável pela URL (`modo=line` ou `modo=candles`). O painel OHLC mostra a sessão sob o cursor e a variação entre abertura e fechamento. A variação destacada acima do gráfico compara o primeiro e o último fechamento do período.
+
+Nos gráficos financeiros, arraste para navegar, use a roda do mouse ou a pinça para ampliar e os controles para ocultar a grade ou abrir a tela cheia. Com o gráfico em foco, `←`/`→` percorrem os registros, `Shift` + setas desloca a janela, `+`/`−` ajustam o zoom, `0` ou `Home` restauram as escalas, `End` seleciona o último registro e `Esc` limpa a seleção. Os gráficos da comparação mantêm cursores e períodos visíveis sincronizados.
+
 O roteamento usa a History API do navegador. Vite, seu preview e o Nginx incluído no Docker atendem links diretos. Em outra hospedagem estática, configure o fallback de rotas para `index.html`.
 
 ## Tecnologias

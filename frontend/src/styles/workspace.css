@@ -74,11 +74,15 @@
 .metric-card strong { display: block; font-size: 25px; font-weight: 400; margin: 15px 0 10px; letter-spacing: -.7px; }
 .metric-card small { display: block; color: var(--muted); font-size: 9px; line-height: 1.7; }
 .metric-card .eyebrow { font-size: 9px; letter-spacing: .6px; }
-.trend-chart-options { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 14px 18px 0; font-size: 10px; }
+.trend-chart-options { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 12px 18px; border-bottom: 1px solid #2a3040; background: #131722; font-size: 11px; }
 .trend-chart-options label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+.terminal-v2 .trend-chart-options input[type="checkbox"] { accent-color: #4b9bff; }
+.terminal-v2 .trend-chart-options input:focus-visible { outline-color: #4b9bff; }
 .trend-chart-options > span { margin-left: auto; }
-.trend-chart { height: 390px; width: 100%; min-width: 0; padding-top: 12px; }
-.trend-legend { display: flex; flex-wrap: wrap; gap: 20px; padding: 12px 20px; font-size: 10px; }
+.trend-chart { height: 390px; width: 100%; min-width: 0; padding-top: 12px; background: #131722; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.trend-chart .recharts-surface:focus-visible { outline: 2px solid #4b9bff; outline-offset: -3px; }
+.trend-chart .recharts-tooltip-wrapper { max-width: calc(100% - 16px); z-index: 2; }
+.trend-legend { display: flex; flex-wrap: wrap; gap: 12px 20px; padding: 12px 20px; border-top: 1px solid #2a3040; background: #131722; color: #a7adb8; font-size: 11px; }
 .analysis-details-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; }
 .analysis-details-grid .coverage-list > div { padding-block: 14px; line-height: 1.6; }
 .analysis-note { color: #cbb496; background: #1d1912; border: 1px solid #56432c; padding: 13px; font-size: 10px; line-height: 1.8; }

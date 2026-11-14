@@ -1,0 +1,117 @@
+.financial-chart {
+  --chart-up: #089981;
+  --chart-down: #f23645;
+  --chart-blue: #4b9bff;
+  --chart-text: #a4afc1;
+  min-width: 0;
+  background: #131722;
+  color: #dce3ef;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.financial-chart .market-chart-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 57px;
+  padding: 10px 16px;
+  background: #121315;
+  border-block: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.financial-chart .chart-instrument {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--chart-text);
+}
+.financial-chart .chart-instrument strong { font-size: 13px; color: #f0f3f9; letter-spacing: .25px; }
+.financial-chart .chart-unit { border: 1px solid #363940; padding: 3px 6px; border-radius: 2px; font-size: 9px; }
+.financial-chart .chart-tool-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.financial-chart .market-chart-tools button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #b6c0d1;
+  font: 11px "Segoe UI", system-ui, sans-serif;
+  cursor: pointer;
+}
+.financial-chart .market-chart-tools button:hover { background: #211b14; color: var(--amber); border-color: #76522b; }
+.financial-chart .market-chart-tools button[aria-pressed="true"] { color: var(--amber); background: #211a12; border-color: #76522b; }
+.financial-chart .market-chart-tools button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.financial-chart .market-chart-tools button:disabled { opacity: .4; cursor: default; }
+.financial-chart .chart-tool-divider { height: 18px; width: 1px; background: #363940; margin-inline: 3px; }
+
+.financial-chart .ohlc-tooltip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  min-height: 74px;
+  padding: 14px 18px;
+  background: #131722;
+  border-bottom: 1px solid #232936;
+}
+.financial-chart .ohlc-tooltip > span { display: grid; gap: 5px; min-width: 0; }
+.financial-chart .ohlc-tooltip small { font-family: "Segoe UI", system-ui, sans-serif; font-size: 10px; color: #919bad; line-height: 1.3; }
+.financial-chart .ohlc-tooltip strong { font-family: var(--mono); font-size: 12px; font-weight: 500; color: #dce3ef; font-variant-numeric: tabular-nums; line-height: 1.35; }
+.financial-chart .ohlc-tooltip > span:first-child { margin-right: 5px; }
+.financial-chart .ohlc-tooltip > span:first-child strong { color: #b7c4d8; }
+.financial-chart .ohlc-tooltip[data-active="true"] > span:first-child strong { color: var(--amber); }
+.financial-chart .ohlc-tooltip[data-direction="up"] > span:nth-child(5) strong,
+.financial-chart .ohlc-tooltip[data-direction="up"] > span:nth-child(6) strong { color: #32c5a8; }
+.financial-chart .ohlc-tooltip[data-direction="down"] > span:nth-child(5) strong,
+.financial-chart .ohlc-tooltip[data-direction="down"] > span:nth-child(6) strong { color: #ff6571; }
+.financial-chart .market-chart-surface { width: 100%; min-width: 0; position: relative; background: #131722; height: 480px; }
+.financial-chart .market-chart-surface:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+
+.financial-chart .chart-direction-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 22px; padding: 13px 18px 9px; border-top: 1px solid #2a3040; color: #b3bed0; font-size: 10px; line-height: 1.5; }
+.financial-chart .chart-direction-legend > span { display: inline-flex; align-items: center; gap: 7px; }
+.financial-chart .chart-direction-legend small { color: #919bad; font-size: 10px; }
+.financial-chart .chart-key { display: inline-block; width: 8px; height: 11px; border-radius: 1px; flex-shrink: 0; }
+.financial-chart .chart-key-up { background: var(--chart-up); }
+.financial-chart .chart-key-down { background: var(--chart-down); }
+.financial-chart .chart-key-line { width: 15px; height: 2px; background: var(--chart-blue); }
+.financial-chart .chart-volume-label { margin-left: auto; color: #919bad; }
+.financial-chart .market-chart-help { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: #919bad; font-size: 10px; padding: 5px 18px 12px; }
+.financial-chart .chart-attribution { padding: 0 18px 12px; color: #919bad; font-size: 9px; }
+.financial-chart .chart-attribution a { color: #a8b6cc; text-decoration: underline; text-underline-offset: 2px; }
+.financial-chart .volume-unavailable { padding: 0 18px 14px; color: #919bad; font-size: 10px; }
+
+.financial-chart.market-chart-compact .market-chart-tools { padding-inline: 12px; }
+.financial-chart.market-chart-compact .chart-instrument { gap: 7px; }
+.financial-chart.market-chart-compact .ohlc-tooltip { padding: 12px; gap: 11px 18px; }
+.financial-chart.market-chart-compact .ohlc-tooltip strong { font-size: 11px; }
+.financial-chart.market-chart-compact .market-chart-surface { height: 320px; }
+.financial-chart:fullscreen { display: flex; flex-direction: column; padding: 14px; overflow: auto; }
+.financial-chart:fullscreen .market-chart-surface { flex: 1 1 240px; min-height: 180px; height: auto !important; }
+.financial-chart:fullscreen .chart-attribution { padding-bottom: 0; }
+
+@media (max-width: 650px) {
+  .financial-chart .market-chart-tools { align-items: stretch; gap: 10px; padding: 12px; }
+  .financial-chart .chart-tool-actions { width: 100%; gap: 3px; }
+  .financial-chart .market-chart-tools button { min-width: 34px; min-height: 36px; padding-inline: 7px; }
+  .financial-chart .chart-tool-divider { margin-inline: 2px; }
+  .financial-chart .ohlc-tooltip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 12px; gap: 13px 10px; }
+  .financial-chart .ohlc-tooltip > span:first-child { grid-column: 1 / -1; display: flex; align-items: center; gap: 9px; margin-right: 0; }
+  .financial-chart .ohlc-tooltip > span:nth-child(6),
+  .financial-chart .ohlc-tooltip > span:nth-child(7) { grid-column: span 2; }
+  .financial-chart .ohlc-tooltip strong { font-size: 11px; overflow-wrap: anywhere; }
+  .financial-chart .ohlc-tooltip small { font-size: 9px; }
+  .financial-chart .market-chart-surface { height: 380px; }
+  .financial-chart.market-chart-compact .market-chart-surface { height: 310px; }
+  .financial-chart .chart-direction-legend { gap: 8px 16px; padding-inline: 12px; }
+  .financial-chart .chart-direction-legend small { display: none; }
+  .financial-chart .chart-volume-label { margin-left: 0; }
+  .financial-chart .market-chart-help { padding-inline: 12px; line-height: 1.6; }
+  .financial-chart .chart-attribution, .financial-chart .volume-unavailable { padding-inline: 12px; }
+}
