@@ -24,7 +24,10 @@
 .terminal-v2 a, .terminal-v2 button { transition: color .16s, background-color .16s, border-color .16s, box-shadow .16s; }
 .terminal-v2 button:disabled { cursor: default; }
 .terminal-v2 .field label { display: block; color: #aab5c5; font-size: 13px; margin-bottom: 8px; }
-.terminal-v2 select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2396a2b5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+.terminal-v2 select { appearance: none; color-scheme: dark; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2396a2b5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+.terminal-v2 select option, .terminal-v2 select optgroup { background-color: #151515; color: #edf1f7; }
+.terminal-v2 select option:checked { background-color: #352a1c; color: #ffd396; }
+.terminal-v2 select option:disabled { color: var(--muted); }
 .terminal-v2 .field input, .terminal-v2 .field select { width: 100%; min-width: 0; padding: 10px 32px 10px 12px; border: 1px solid #363636; background-color: #101010; color: #e6ecf5; font: 14px var(--sans); min-height: 42px; }
 .terminal-v2 .field input { padding-right: 12px; }
 .terminal-v2 .field input:hover, .terminal-v2 .field select:hover { border-color: #56647a; }
@@ -36,10 +39,11 @@
 .topbar-divider { height: 24px; width: 1px; background: #353535; flex-shrink: 0; }
 .topbar-context { color: #b2bdcf; font-size: 13px; white-space: nowrap; }
 .global-search { display: flex; align-items: center; width: min(310px, 23vw); min-width: 190px; height: 38px; border: 1px solid #333333; border-radius: 7px; background: #0e0e0e; overflow: hidden; }
+.global-search:focus-within { border-color: #666666; }
 .global-search > svg { margin-left: 11px; flex-shrink: 0; color: #8090a6; }
-.terminal-v2 .global-search select { min-width: 0; width: 100%; border: 0; border-radius: 0; background-color: transparent; color: #cdd5e2; padding: 8px 28px 8px 9px; font-size: 12px; min-height: 36px; text-overflow: ellipsis; cursor: pointer; }
+.terminal-v2 .global-search select { min-width: 0; width: 100%; border: 0; border-radius: 0; background-color: #0e0e0e; color: #cdd5e2; padding: 8px 28px 8px 9px; font-size: 12px; min-height: 36px; text-overflow: ellipsis; cursor: pointer; }
 .global-search select:disabled { color: var(--muted); cursor: default; }
-.global-search select:focus-visible { outline-offset: -3px; }
+.terminal-v2 .global-search select:focus-visible { outline: none; }
 .terminal-v2 .global-search button { align-self: stretch; border-radius: 0; background: #202020; color: #cdd5e2; border: 0; border-left: 1px solid #333333; padding: 6px 11px; font-size: 12px; white-space: nowrap; }
 .global-search button:hover { color: var(--amber); background: #2a2a29; }
 .market-ticker { display: flex; align-items: center; flex: 1 1 0; min-width: 0; height: 38px; overflow: hidden; border: 1px solid var(--border); border-radius: 6px; background: #101010; }
@@ -48,17 +52,17 @@
 .market-ticker-viewport { flex: 1; min-width: 0; overflow: hidden; }
 .market-ticker-viewport:focus-visible { outline-offset: -3px; }
 .market-ticker-track { display: flex; width: 100%; }
-.market-ticker-group { display: flex; align-items: center; justify-content: space-around; flex: 0 0 auto; width: max-content; min-width: 100%; gap: 28px; list-style: none; margin: 0; padding: 0 16px; animation: market-ticker-left var(--ticker-duration, 40s) linear infinite; }
+.market-ticker-group { display: flex; align-items: center; justify-content: space-around; flex: 0 0 auto; width: max-content; min-width: 100%; gap: 28px; list-style: none; margin: 0; padding: 0 16px; animation: market-ticker-left var(--ticker-duration, 40s) linear infinite; animation-play-state: running; will-change: transform; }
 .market-ticker-quote { display: flex; flex-shrink: 0; align-items: baseline; gap: 9px; white-space: nowrap; font: 11px var(--mono); font-variant-numeric: tabular-nums; }
 .market-ticker-quote strong { color: #dce4f0; font-size: 11px; font-weight: 600; }
 .market-ticker-price { color: #aeb9ca; }
-.terminal-v2 .market-ticker-toggle { display: grid; place-items: center; align-self: stretch; flex-shrink: 0; width: 30px; padding: 0; border: 0; border-left: 1px solid var(--border); border-radius: 0; background: #1b1b1b; color: var(--amber); font-size: 12px; }
-.terminal-v2 .market-ticker-toggle:hover { background: #2c281f; }
-.market-ticker-toggle:focus-visible { outline-offset: -3px; }
-.market-ticker.is-paused .market-ticker-group { animation-play-state: paused; }
 .market-ticker-status { flex: 1; min-width: 0; margin: 0; padding: 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
 @keyframes market-ticker-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
-@media (prefers-reduced-motion: reduce) { .market-ticker-group { animation-play-state: paused; } }
+/* The quotes ribbon was explicitly requested as a continuous loop. Keep the
+   global reduced-motion behavior for the rest of the interface. */
+@media (prefers-reduced-motion: reduce) {
+  .market-ticker-group { animation-duration: var(--ticker-duration, 40s) !important; animation-play-state: running; }
+}
 .terminal-clock { margin-left: auto; display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--muted); white-space: nowrap; }
 .terminal-clock time { color: #e8edf5; font-size: 14px; }
 .historical-badge { display: inline-flex; gap: 6px; align-items: center; color: #d6b785; font-size: 11px; white-space: nowrap; padding: 6px 8px; border: 1px solid #50412c; border-radius: 5px; background: #221e18; }
