@@ -118,6 +118,14 @@ export const buscarHistoricoMercado = (
   id: string, period: MarketPeriod, interval: MarketInterval,
   options: { force?: boolean } = {},
 ): Promise<MarketHistory> => {
+  if (period === "1d") {
+    if (interval !== "1d") return Promise.reject(new MarketApiError("A visualização de 1 dia usa candles diários.", 400));
+    // Reuse the supported daily query and its cache; do not invent a candle for a non-trading day.
+    return buscarHistoricoMercado(id, "5d", "1d", options).then((history) => {
+      const data = history.data.slice(-1);
+      return { ...history, period, count: data.length, data };
+    });
+  }
   const params = new URLSearchParams({ period, interval });
   return cachedRequest(`history:${id}:${period}:${interval}`, async () => {
     const history = validarHistorico(await fetchJSON(`/api/assets/${encodeURIComponent(id)}/history?${params}`));

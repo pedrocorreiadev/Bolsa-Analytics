@@ -1,12 +1,13 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import {
-  createChart, LineSeries, HistogramSeries, ColorType, CrosshairMode,
+  createChart, AreaSeries, LineSeries, ColorType, CrosshairMode,
   type IChartApi, type ISeriesApi, type SeriesType, type Time,
 } from "lightweight-charts";
 import type { MarketHistory, OHLCVPoint } from "../types/market";
 import { formatMarketDate, formatMarketValue } from "../utils/formatMarket";
 import { CHART_COLORS } from "../utils/chartTheme";
 import SlenderCandles from "./charts/SlenderCandles";
+import { Icon } from "./Icon";
 import "../styles/candles.css";
 import "../styles/market-chart.css";
 
@@ -39,11 +40,14 @@ export default function MarketChart({ history, mode = "candles", compact = false
   const tooltipRef = useRef<HTMLDivElement>(null);
   const announcementRef = useRef<HTMLParagraphElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const closeLineRef = useRef<ISeriesApi<"Line"> | null>(null);
   const selectionRef = useRef(0);
   const selectPointRef = useRef<((index: number) => void) | null>(null);
   const clearSelectionRef = useRef<(() => void) | null>(null);
   const gridVisibleRef = useRef(true);
+  const closeLineVisibleRef = useRef(true);
   const [gridVisible, setGridVisible] = useState(true);
+  const [closeLineVisible, setCloseLineVisible] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const helpId = useId();
   const hasVolume = history.data.some((point) => point.volume !== null);
@@ -64,7 +68,7 @@ export default function MarketChart({ history, mode = "candles", compact = false
       height: container.clientHeight || (compact ? 320 : 480),
       layout: {
         background: { type: ColorType.Solid, color: CHART_COLORS.background },
-        textColor: CHART_COLORS.text, fontFamily: '"Segoe UI", system-ui, sans-serif', fontSize: 11,
+        textColor: CHART_COLORS.text, fontFamily: '"Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif', fontSize: 12,
         attributionLogo: true,
         panes: { separatorColor: CHART_COLORS.border, separatorHoverColor: "#4b5972", enableResize: true },
       },
@@ -74,8 +78,8 @@ export default function MarketChart({ history, mode = "candles", compact = false
       },
       crosshair: {
         mode: CrosshairMode.Magnet,
-        vertLine: { color: "#69758b", labelBackgroundColor: "#34415a", width: 1, style: 2 },
-        horzLine: { color: "#69758b", labelBackgroundColor: "#34415a", width: 1, style: 2 },
+        vertLine: { color: "#75849b", labelBackgroundColor: "#35445c", width: 1, style: 2 },
+        horzLine: { color: "#75849b", labelBackgroundColor: "#35445c", width: 1, style: 2 },
       },
       rightPriceScale: { borderColor: CHART_COLORS.border, scaleMargins: { top: 0.12, bottom: 0.1 }, minimumWidth: compact ? 68 : 80 },
       timeScale: { borderColor: CHART_COLORS.border, timeVisible: false, secondsVisible: false, rightOffset: 4, minBarSpacing: 2, barSpacing: 9, lockVisibleTimeRangeOnResize: true },
@@ -93,8 +97,10 @@ export default function MarketChart({ history, mode = "candles", compact = false
     const priceFormat = { type: "price" as const, precision, minMove: 10 ** -precision };
     let mainSeries: ISeriesApi<SeriesType>;
     if (mode === "line") {
-      const series = chart.addSeries(LineSeries, {
-        color: CHART_COLORS.primary, lineWidth: 2, priceFormat, lastValueVisible: true,
+      const series = chart.addSeries(AreaSeries, {
+        lineColor: CHART_COLORS.primary, topColor: CHART_COLORS.areaTop, bottomColor: CHART_COLORS.areaBottom,
+        lineWidth: 2, priceFormat, lastValueVisible: true,
+        pointMarkersVisible: history.data.length === 1, pointMarkersRadius: 4,
         crosshairMarkerVisible: true, crosshairMarkerRadius: 4,
         crosshairMarkerBorderColor: CHART_COLORS.primary, crosshairMarkerBackgroundColor: CHART_COLORS.background,
         priceLineColor: CHART_COLORS.primary, priceLineWidth: 1, priceLineStyle: 2,
@@ -102,6 +108,14 @@ export default function MarketChart({ history, mode = "candles", compact = false
       series.setData(history.data.map((point) => ({ time: point.date, value: point.close })));
       mainSeries = series;
     } else {
+      // Draw the closing-price guide first so the candle bodies stay in front.
+      const closeLine = chart.addSeries(LineSeries, {
+        color: CHART_COLORS.closeLine, lineWidth: 1, priceFormat,
+        visible: closeLineVisibleRef.current, lastValueVisible: false,
+        priceLineVisible: false, crosshairMarkerVisible: false,
+      });
+      closeLine.setData(history.data.map((point) => ({ time: point.date, value: point.close })));
+      closeLineRef.current = closeLine;
       const series = chart.addCustomSeries(new SlenderCandles(), {
         priceFormat, priceLineWidth: 1, priceLineStyle: 2,
       });
@@ -110,14 +124,6 @@ export default function MarketChart({ history, mode = "candles", compact = false
         color: point.close >= point.open ? CHART_COLORS.up : CHART_COLORS.down,
       })));
       mainSeries = series;
-    }
-    if (hasVolume) {
-      const volume = chart.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceLineVisible: false, lastValueVisible: false }, 1);
-      volume.setData(history.data.map((point) => point.volume === null
-        ? { time: point.date }
-        : { time: point.date, value: point.volume, color: point.close >= point.open ? CHART_COLORS.volumeUp : CHART_COLORS.volumeDown }));
-      chart.panes()[1]?.setHeight(compact ? 75 : 100);
-      volume.priceScale().applyOptions({ scaleMargins: { top: 0.15, bottom: 0 }, borderVisible: false });
     }
 
     const points = new Map(history.data.map((point) => [point.date, point]));
@@ -237,10 +243,11 @@ export default function MarketChart({ history, mode = "candles", compact = false
       }
       selectPointRef.current = null;
       clearSelectionRef.current = null;
+      closeLineRef.current = null;
       chartRef.current = null;
       chart.remove();
     };
-  }, [history, mode, compact, syncId, hasVolume]);
+  }, [history, mode, compact, syncId]);
 
   function fitChart() {
     for (const pane of chartRef.current?.panes() ?? []) pane.priceScale("right").applyOptions({ autoScale: true });
@@ -253,6 +260,13 @@ export default function MarketChart({ history, mode = "candles", compact = false
     gridVisibleRef.current = visible;
     setGridVisible(visible);
     chartRef.current?.applyOptions({ grid: { vertLines: { visible }, horzLines: { visible } } });
+  }
+
+  function toggleCloseLine() {
+    const visible = !closeLineVisibleRef.current;
+    closeLineVisibleRef.current = visible;
+    setCloseLineVisible(visible);
+    closeLineRef.current?.applyOptions({ visible });
   }
 
   async function toggleFullscreen() {
@@ -301,15 +315,16 @@ export default function MarketChart({ history, mode = "candles", compact = false
       <div className="market-chart-tools" role="group" aria-label={`Controles do gráfico ${history.ticker}`}>
         <span className="chart-instrument"><strong>{history.ticker}</strong><span>{mode === "candles" ? "Candles" : "Fechamento"}</span><span className="chart-unit">{history.unit === "points" ? "Pontos" : history.currency}</span></span>
         <div className="chart-tool-actions">
-          <button type="button" onClick={() => pan(-1)} aria-label="Deslocar gráfico para a esquerda" title="Deslocar para a esquerda (Shift + ←)">←</button>
-          <button type="button" onClick={() => pan(1)} aria-label="Deslocar gráfico para a direita" title="Deslocar para a direita (Shift + →)">→</button>
+          <button type="button" onClick={() => pan(-1)} aria-label="Deslocar gráfico para a esquerda" title="Deslocar para a esquerda (Shift + ←)"><Icon name="chevron-left" size={16} /></button>
+          <button type="button" onClick={() => pan(1)} aria-label="Deslocar gráfico para a direita" title="Deslocar para a direita (Shift + →)"><Icon name="chevron-right" size={16} /></button>
           <span className="chart-tool-divider" aria-hidden="true" />
-          <button type="button" onClick={() => zoom(0.7)} aria-label="Aproximar gráfico" title="Aproximar (+)">+</button>
-          <button type="button" onClick={() => zoom(1.4)} aria-label="Afastar gráfico" title="Afastar (−)">−</button>
-          <button type="button" onClick={fitChart} title="Ajustar todo o histórico (0)">Ajustar</button>
+          <button type="button" onClick={() => zoom(0.7)} aria-label="Aproximar gráfico" title="Aproximar (+)"><Icon name="plus" size={16} /></button>
+          <button type="button" onClick={() => zoom(1.4)} aria-label="Afastar gráfico" title="Afastar (−)"><Icon name="minus" size={16} /></button>
+          <button type="button" onClick={fitChart} title="Ajustar todo o histórico (0)"><Icon name="fit" size={15} />Ajustar</button>
           <span className="chart-tool-divider" aria-hidden="true" />
-          <button type="button" onClick={toggleGrid} aria-pressed={gridVisible} title={gridVisible ? "Ocultar grade do gráfico" : "Mostrar grade do gráfico"}>Grade</button>
-          <button type="button" onClick={toggleFullscreen} aria-pressed={fullscreen} disabled={!document.fullscreenEnabled} title={fullscreen ? "Sair da tela cheia (Esc)" : "Abrir gráfico em tela cheia"}>{fullscreen ? "Sair" : "Tela cheia"}</button>
+          <button type="button" onClick={toggleGrid} aria-pressed={gridVisible} title={gridVisible ? "Ocultar grade do gráfico" : "Mostrar grade do gráfico"}><Icon name="grid" size={15} />Grade</button>
+          {mode === "candles" && <button type="button" onClick={toggleCloseLine} aria-pressed={closeLineVisible} title={closeLineVisible ? "Ocultar linha do preço de fechamento" : "Mostrar linha do preço de fechamento"}><Icon name="chart" size={15} />Fechamento</button>}
+          <button type="button" onClick={toggleFullscreen} aria-pressed={fullscreen} disabled={!document.fullscreenEnabled} title={fullscreen ? "Sair da tela cheia (Esc)" : "Abrir gráfico em tela cheia"}><Icon name={fullscreen ? "minimize" : "maximize"} size={15} />{fullscreen ? "Sair" : "Tela cheia"}</button>
         </div>
       </div>
       <div ref={tooltipRef} className="ohlc-tooltip mono" aria-label="Valores da sessão sob o cursor" />
@@ -326,7 +341,8 @@ export default function MarketChart({ history, mode = "candles", compact = false
       />
       <div className="chart-direction-legend" aria-label="Legenda do gráfico">
         {mode === "candles" ? <><span><i className="chart-key chart-key-up" aria-hidden="true" />Alta <small>fechamento ≥ abertura</small></span><span><i className="chart-key chart-key-down" aria-hidden="true" />Baixa <small>fechamento &lt; abertura</small></span></> : <span><i className="chart-key chart-key-line" aria-hidden="true" />Preço de fechamento</span>}
-        {hasVolume && <span className="chart-volume-label">Volume no painel inferior</span>}
+        {mode === "candles" && closeLineVisible && <span><i className="chart-key chart-key-line chart-key-close" aria-hidden="true" />Preço de fechamento</span>}
+        {hasVolume && <span className="chart-volume-label">Volume nos detalhes da sessão</span>}
       </div>
       <div id={helpId} className="market-chart-help"><span>Arraste para navegar · role ou use pinça para zoom</span><span>Teclado: ← → sessões · + − zoom · 0 ajustar</span></div>
       <div className="chart-attribution">TradingView Lightweight Charts™ · Copyright © 2025 <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">TradingView, Inc.</a></div>

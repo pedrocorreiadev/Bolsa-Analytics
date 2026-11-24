@@ -1,4 +1,5 @@
 import { Icon } from "../components/Icon";
+import AssetIcon from "../components/AssetIcon";
 import MarketChart from "../components/MarketChart";
 import useMarketAssets from "../hooks/useMarketAssets";
 import useMarketHistory from "../hooks/useMarketHistory";
@@ -7,7 +8,7 @@ import { MARKET_INTERVALS, MARKET_PERIODS, intervalosPermitidos, isMarketInterva
 import { formatMarketDate, formatMarketPercent, formatMarketValue } from "../utils/formatMarket";
 import "../styles/candles.css";
 
-const periodLabels = { "5d": "5D", "1mo": "1M", "3mo": "3M", "6mo": "6M", "1y": "1A", "2y": "2A", "5y": "5A" };
+const periodLabels = { "1d": "1D", "5d": "5D", "1mo": "1M", "3mo": "3M", "6mo": "6M", "1y": "1A", "2y": "2A", "5y": "5A" };
 
 export default function CandlesPage({ initialMode = "candles" }: { initialMode?: "candles" | "line" }) {
   const route = useRoute();
@@ -26,7 +27,8 @@ export default function CandlesPage({ initialMode = "candles" }: { initialMode?:
   const history = request.history;
   const latest = history?.data.at(-1);
   const first = history?.data[0];
-  const change = history && latest && first && history.data.length > 1 && first.close !== 0 ? ((latest.close - first.close) / first.close) * 100 : null;
+  const changeBase = period === "1d" ? latest?.open : history && history.data.length > 1 ? first?.close : null;
+  const change = latest && changeBase != null && changeBase !== 0 ? ((latest.close - changeBase) / changeBase) * 100 : null;
   const high = history?.data.reduce((value, point) => Math.max(value, point.high), -Infinity) ?? 0;
   const low = history?.data.reduce((value, point) => Math.min(value, point.low), Infinity) ?? 0;
   const rangePosition = latest && high > low
@@ -51,7 +53,8 @@ export default function CandlesPage({ initialMode = "candles" }: { initialMode?:
           <div className="field"><label htmlFor="candle-interval">Intervalo entre registros</label><select id="candle-interval" value={rawInterval} onChange={(event) => update("intervalo", event.target.value)}>{(!isMarketInterval(rawInterval) || !intervalosPermitidos(period).includes(interval)) && <option value={rawInterval}>Intervalo não suportado</option>}{MARKET_INTERVALS.filter((item) => intervalosPermitidos(period).includes(item.value)).map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></div>
           <div className="field"><span id="candle-mode-label" className="candle-field-label">Visualização</span><div className="candle-mode-control" role="group" aria-labelledby="candle-mode-label"><button type="button" aria-pressed={mode === "candles"} onClick={() => update("modo", "candles")}><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M6 2v4m0 7v5M14 2v6m0 7v3" /><path d="M3.5 6h5v7h-5zM11.5 8h5v7h-5z" /></svg>Candles</button><button type="button" aria-pressed={mode === "line"} onClick={() => update("modo", "line")}><Icon name="chart" size={16} />Linha</button></div></div>
         </div>
-        <div className="candle-period-bar"><span id="candle-period-label">Período</span><div className="candle-period-control" role="group" aria-labelledby="candle-period-label">{MARKET_PERIODS.map((item) => <button type="button" key={item.value} aria-pressed={rawPeriod === item.value} aria-label={item.label} title={item.label} onClick={() => update("periodo", item.value)}>{periodLabels[item.value]}</button>)}</div><span className="candle-period-description">{MARKET_PERIODS.find((item) => item.value === rawPeriod)?.label ?? "Período não suportado"} de histórico</span></div>
+        <div className="candle-period-bar"><span id="candle-period-label">Período</span><div className="candle-period-control" role="group" aria-labelledby="candle-period-label">{MARKET_PERIODS.map((item) => <button type="button" key={item.value} aria-pressed={rawPeriod === item.value} aria-label={item.label} title={item.label} onClick={() => update("periodo", item.value)}>{periodLabels[item.value]}</button>)}</div><span className="candle-period-description">{rawPeriod === "1d" ? "Última sessão disponível" : `${MARKET_PERIODS.find((item) => item.value === rawPeriod)?.label ?? "Período não suportado"} de histórico`}</span></div>
+        {period === "1d" && <p className="candle-period-note">1D mostra o candle diário da última sessão disponível. A variação compara a abertura e o fechamento dessa sessão.</p>}
       </section>
 
       {catalog.loading ? <div className="panel state-message candle-state" role="status"><strong>Carregando ativos</strong><span>Consultando o catálogo do backend.</span></div>
@@ -64,11 +67,11 @@ export default function CandlesPage({ initialMode = "candles" }: { initialMode?:
                     : <>
                       <section className="panel candle-main-panel" aria-labelledby="candle-chart-title">
                         <div className="panel-header"><h2 id="candle-chart-title">Histórico de preços <span className="panel-symbol">{history.ticker}</span></h2><button type="button" className="candle-refresh" onClick={request.reload} title="Consultar o histórico novamente"><Icon name="refresh" size={14} /><span>Atualizar</span></button></div>
-                        <div className="candle-quote"><div className="candle-instrument"><span className="candle-symbol-badge mono">{history.ticker.replace(/\.SA$/, "")}</span><div><span className="eyebrow">{selected.category}</span><h3>{selected.name}</h3><p className="muted">{history.unit === "points" ? "Pontos" : history.currency} · {history.timezone ?? "Fuso não informado pela fonte"}</p></div></div><div className="candle-last-value"><span className="candle-price-label">Último fechamento</span><strong className="mono">{formatMarketValue(latest.close, history.currency, history.unit)}</strong>{change !== null ? <span className={`candle-change mono ${change > 0 ? "positive" : change < 0 ? "negative" : "neutral"}`}>{change !== 0 && <Icon name={change > 0 ? "arrow-up" : "arrow-down"} size={14} />}{formatMarketPercent(change)} <small>no período</small></span> : <span className="candle-change muted">Variação indisponível neste período</span>}<small className="muted">Sessão de {formatMarketDate(latest.date)}</small></div></div>
+                        <div className="candle-quote"><div className="candle-instrument"><AssetIcon asset={selected} size="large" /><div><span className="eyebrow">{selected.category}</span><h3>{selected.name}</h3><p className="muted">{history.unit === "points" ? "Pontos" : history.currency} · {history.timezone ?? "Fuso não informado pela fonte"}</p></div></div><div className="candle-last-value"><span className="candle-price-label">Último fechamento</span><strong className="mono">{formatMarketValue(latest.close, history.currency, history.unit)}</strong>{change !== null ? <span className={`candle-change mono ${change > 0 ? "positive" : change < 0 ? "negative" : "neutral"}`}>{change !== 0 && <Icon name={change > 0 ? "arrow-up" : "arrow-down"} size={14} />}{formatMarketPercent(change)} <small>{period === "1d" ? "na sessão" : "no período"}</small></span> : <span className="candle-change muted">Variação indisponível neste período</span>}<small className="muted">Sessão de {formatMarketDate(latest.date)}</small></div></div>
                         <div className="candle-range" aria-label="Faixa de preços do período"><span><small>Mínima do período</small><strong className="mono">{formatMarketValue(low, history.currency, history.unit)}</strong></span><div className="candle-range-track" role="img" aria-label={`Último fechamento em ${Math.round(rangePosition)}% da faixa entre a mínima e a máxima do período`}><span style={{ left: `${rangePosition}%` }} /></div><span><small>Máxima do período</small><strong className="mono">{formatMarketValue(high, history.currency, history.unit)}</strong></span></div>
                         {Boolean(history.discarded) && <p className="candle-data-note" role="status">{history.discarded} registro(s) inválido(s) ou duplicado(s) ignorado(s). Nenhum dado foi preenchido artificialmente.</p>}
                         <MarketChart key={`${history.asset}:${history.period}:${history.interval}:${mode}`} history={history} mode={mode} />
-                        <div className="panel-footer"><span>{history.source}</span><span>{history.count} registros · {history.interval === "1d" ? "Diário" : history.interval === "1wk" ? "Semanal" : "Mensal"} · {formatMarketDate(history.data[0].date)} — {formatMarketDate(latest.date)}</span></div>
+                        <div className="panel-footer"><span>{history.source}</span><span>{history.count} {history.count === 1 ? "registro" : "registros"} · {history.interval === "1d" ? "Diário" : history.interval === "1wk" ? "Semanal" : "Mensal"} · {formatMarketDate(history.data[0].date)} — {formatMarketDate(latest.date)}</span></div>
                       </section>
                       <section className="panel candle-summary" aria-label="Resumo do histórico selecionado"><dl><div><dt>Primeira sessão</dt><dd className="mono">{formatMarketDate(history.data[0].date)}</dd></div><div><dt>Maior máxima no período</dt><dd className="mono">{formatMarketValue(Math.max(...history.data.map((point) => point.high)), history.currency, history.unit)}</dd></div><div><dt>Menor mínima no período</dt><dd className="mono">{formatMarketValue(Math.min(...history.data.map((point) => point.low)), history.currency, history.unit)}</dd></div><div><dt>Registros válidos</dt><dd className="mono">{history.count}</dd></div></dl></section>
                     </>}

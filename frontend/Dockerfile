@@ -17,6 +17,9 @@ RUN npm run build
 
 FROM nginx:stable-alpine@sha256:0e52bd054126cdc040b1276c0af347aeb02a41b9cfe305d6094767ac30e97949 AS runtime
 
+LABEL org.opencontainers.image.title="Bolsa Analytics Frontend" \
+      org.opencontainers.image.description="Interface de mercado com tema preto fosco"
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/frontend/dist/ /usr/share/nginx/html/
 

@@ -69,6 +69,7 @@ test("correlation requires three varying return pairs and stays within bounds", 
 });
 
 test("interval controls share API restrictions and daily labels do not shift timezone", () => {
+  assert.deepEqual(comparisonIntervals("1d").map(({ value }) => value), ["1d"]);
   assert.deepEqual(comparisonIntervals("5d").map(({ value }) => value), ["1d"]);
   assert.deepEqual(comparisonIntervals("1mo").map(({ value }) => value), ["1d", "1wk"]);
   assert.deepEqual(comparisonIntervals("3mo").map(({ value }) => value), ["1d", "1wk", "1mo"]);

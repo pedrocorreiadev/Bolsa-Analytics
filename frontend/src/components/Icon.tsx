@@ -1,20 +1,36 @@
 import type { SVGProps } from "react";
 
-// Phosphor Icons (duotone / fill), MIT. Original SVGs and license:
-// ../assets/icons/ and ../../../THIRD_PARTY_NOTICES.md.
+// Local SVG artwork. A shared stroke keeps small toolbar and navigation icons legible.
 const artwork = {
-  "user": <><circle cx="128" cy="80" r="40" opacity=".2" /><path d="M128 128a48 48 0 1 0 0-96 48 48 0 0 0 0 96Zm0-80a32 32 0 1 1 0 64 32 32 0 0 1 0-64Zm88 168h-16c0-40-32-64-72-64s-72 24-72 64H40c0-48 38-80 88-80s88 32 88 80Z" /></>,
-  "settings": <><circle cx="128" cy="128" r="72" opacity=".2" /><path d="M120 16h16v32h-16Zm0 192h16v32h-16ZM16 120h32v16H16Zm192 0h32v16h-32ZM43 54l11-11 23 23-11 11Zm136 136 11-11 23 23-11 11ZM43 202l23-23 11 11-23 23ZM179 66l23-23 11 11-23 23ZM128 64a64 64 0 1 0 0 128 64 64 0 0 0 0-128Zm0 16a48 48 0 1 1 0 96 48 48 0 0 1 0-96Zm0 24a24 24 0 1 0 0 48 24 24 0 0 0 0-48Z" /></>,
-  "shield": <><path d="m128 24 88 32v64c0 56-48 96-88 112-40-16-88-56-88-112V56Z" opacity=".2" /><path d="m128 16 96 35v69c0 60-51 103-93 119l-3 1-3-1c-42-16-93-59-93-119V51Zm0 17L48 62v58c0 49 43 87 80 103 37-16 80-54 80-103V62Zm40 60 12 12-60 60-36-36 12-12 24 24Z" /></>,
-  "logout": <path d="M32 32h88v16H48v160h72v16H32Zm136 40 56 56-56 56-12-12 36-36H96v-16h96l-36-36Z" />,
-  "chart": <><path d="M224,64V208H32V48H208A16,16,0,0,1,224,64Z" opacity="0.2" /><path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0v94.37L90.73,98a8,8,0,0,1,10.07-.38l58.81,44.11L218.73,90a8,8,0,1,1,10.54,12l-64,56a8,8,0,0,1-10.07.38L96.39,114.29,40,163.63V200H224A8,8,0,0,1,232,208Z" /></>,
-  "caret-down": <><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,48,88H208a8,8,0,0,1,5.66,13.66Z" /></>,
-  "refresh": <><path d="M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1-5.66-13.66l17-17-10.55-9.65-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,1,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60l10.93,10L226.34,50.3A8,8,0,0,1,240,56Z" /></>,
-  "arrow-up": <><path d="M200,64V168a8,8,0,0,1-13.66,5.66L140,127.31,69.66,197.66a8,8,0,0,1-11.32-11.32L128.69,116,82.34,69.66A8,8,0,0,1,88,56H192A8,8,0,0,1,200,64Z" /></>,
-  "arrow-down": <><path d="M200,88V192a8,8,0,0,1-8,8H88a8,8,0,0,1-5.66-13.66L128.69,140,58.34,69.66A8,8,0,0,1,69.66,58.34L140,128.69l46.34-46.35A8,8,0,0,1,200,88Z" /></>,
-  "compare": <><path d="M42.34,85.66a8,8,0,0,1,0-11.32l32-32A8,8,0,0,1,88,48V72H208a8,8,0,0,1,0,16H88v24a8,8,0,0,1-13.66,5.66Zm171.32,84.68-32-32A8,8,0,0,0,168,144v24H48a8,8,0,0,0,0,16H168v24a8,8,0,0,0,13.66,5.66l32-32A8,8,0,0,0,213.66,170.34Z" /></>,
-  "history": <><path d="M216,128a88,88,0,1,1-88-88A88,88,0,0,1,216,128Z" opacity="0.2" /><path d="M136,80v43.47l36.12,21.67a8,8,0,0,1-8.24,13.72l-40-24A8,8,0,0,1,120,128V80a8,8,0,0,1,16,0Zm-8-48A95.44,95.44,0,0,0,60.08,60.15C52.81,67.51,46.35,74.59,40,82V64a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H72a8,8,0,0,0,0-16H49c7.15-8.42,14.27-16.35,22.39-24.57a80,80,0,1,1,1.66,114.75,8,8,0,1,0-11,11.64A96,96,0,1,0,128,32Z" /></>,
-};
+  user: <><circle cx="12" cy="8" r="3.5" /><path d="M5 21v-2a7 7 0 0 1 14 0v2" /></>,
+  settings: <><path d="m9 3-.6 2.2-2 .9-2-.6L2.9 9l1.5 1.6v2.8L2.9 15l1.5 3.5 2-.6 2 .9L9 21h6l.6-2.2 2-.9 2 .6 1.5-3.5-1.5-1.6v-2.8L21.1 9l-1.5-3.5-2 .6-2-.9L15 3Z" /><circle cx="12" cy="12" r="3" /></>,
+  shield: <><path d="m12 3 8 3v6c0 4.6-4.7 7.8-8 9-3.3-1.2-8-4.4-8-9V6Z" /><path d="m8.5 12 2.5 2.5 4.5-5" /></>,
+  logout: <path d="M10 4H4v16h6M14 8l4 4-4 4m-6-4h10" />,
+  dashboard: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="4" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="11" width="7" height="10" rx="1.5" /></>,
+  market: <path d="m3 9 9-6 9 6H3Zm2 3v6m7-6v6m7-6v6M3 21h18" />,
+  chart: <path d="M3 3v18h18M6 15l5-5 4 3 6-8" />,
+  candles: <><path d="M6 3v4m0 9v5m6-18v10m0 5v3m6-18v3m0 9v6" /><rect x="3.5" y="7" width="5" height="9" rx=".8" /><rect x="9.5" y="13" width="5" height="5" rx=".8" /><rect x="15.5" y="6" width="5" height="9" rx=".8" /></>,
+  trend: <path d="m3 17 6-6 4 4 8-10m-6 0h6v6" />,
+  quotes: <path d="M2 13h4l3-8 5 15 3-9h5" />,
+  "caret-down": <path d="m7 10 5 5 5-5" />,
+  "chevron-left": <path d="m14 6-6 6 6 6" />,
+  "chevron-right": <path d="m10 6 6 6-6 6" />,
+  refresh: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6.1 6.2A8 8 0 0 1 19.8 12M4.2 12a8 8 0 0 0 13.7 5.8" /></>,
+  "arrow-up": <path d="M6 18 18 6M7 6h11v11" />,
+  "arrow-down": <path d="m6 6 12 12M7 18h11V7" />,
+  compare: <path d="M3 7h17m-4-4 4 4-4 4M21 17H4m4-4-4 4 4 4" />,
+  history: <><path d="M3 4v5h5M3.6 9a9 9 0 1 1 .8 8" /><path d="M12 7v5l3 2" /></>,
+  search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></>,
+  layers: <path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5" />,
+  database: <><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7" /></>,
+  calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M7 3v4m10-4v4M3 11h18m-13 4h1m6 0h1m-8 3h1" /></>,
+  plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
+  fit: <><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" /><rect x="8" y="8" width="8" height="8" rx="1" /></>,
+  grid: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18m6-18v18M3 9h18M3 15h18" /></>,
+  maximize: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />,
+  minimize: <path d="M3 8h5V3m8 0v5h5M3 16h5v5m8 0v-5h5" />,
+} as const;
 
 export type IconName = keyof typeof artwork;
 
@@ -24,17 +40,5 @@ type IconProps = Omit<SVGProps<SVGSVGElement>, "name" | "children"> & {
 };
 
 export function Icon({ name, size = 18, ...props }: IconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 256 256"
-      fill="currentColor"
-      focusable="false"
-      aria-hidden="true"
-      {...props}
-    >
-      {artwork[name]}
-    </svg>
-  );
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.65} strokeLinecap="round" strokeLinejoin="round" focusable="false" aria-hidden="true" {...props}>{artwork[name]}</svg>;
 }

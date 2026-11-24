@@ -1,0 +1,22 @@
+.asset-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; overflow: hidden; border: 1px solid #363636; border-radius: 9px; background: #202020; color: #dbe1ea; vertical-align: middle; }
+.asset-icon-image { display: block; width: 80%; height: 80%; object-fit: contain; }
+.asset-icon-petrobras, .asset-icon-vale, .asset-icon-ibovespa { background: #fff; border-color: #e0e4e2; }
+.asset-icon-petrobras .asset-icon-image { width: 90%; height: 90%; }
+.asset-icon-ibovespa .asset-icon-image { width: 86%; height: 86%; }
+.asset-icon-bitcoin { background: #2e2417; border-color: #64451f; }
+.asset-icon-bitcoin .asset-icon-image { width: 88%; height: 88%; }
+.asset-icon-flag { background: #222; border-color: #3b3b3b; }
+.asset-icon-flag .asset-icon-image { width: 78%; height: 59%; object-fit: cover; border-radius: 2px; box-shadow: 0 0 0 1px #ffffff18; }
+.asset-icon-quote-currency { position: absolute; right: 1px; bottom: 2px; width: 43%; height: 35%; object-fit: cover; border: 2px solid #222; border-radius: 3px; }
+.asset-icon-ouro { background: #33291a; border-color: #655032; }
+.asset-icon-gold { display: block; width: 83%; height: 83%; }
+.asset-icon-fallback { font: 650 13px var(--sans); letter-spacing: -.5px; }
+.asset-icon-small { width: 30px; height: 30px; border-radius: 7px; }
+.asset-icon-small .asset-icon-fallback { font-size: 11px; }
+.asset-icon-large { width: 58px; height: 58px; border-radius: 12px; }
+.asset-icon-large .asset-icon-fallback { font-size: 20px; }
+.asset-icon-large .asset-icon-quote-currency { right: 2px; bottom: 3px; border-width: 3px; border-radius: 4px; }
+.market-asset-identity { display: flex; align-items: center; gap: 11px; }
+.market-asset-identity strong { display: block; font-size: 13px; font-weight: 600; }
+.market-asset-identity small { display: block; margin-top: 6px; color: var(--muted); font: 12px var(--sans); }
+@media (max-width: 650px) { .asset-icon-large { width: 52px; height: 52px; } }

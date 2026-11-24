@@ -1,4 +1,4 @@
-export type MarketPeriod = "5d" | "1mo" | "3mo" | "6mo" | "1y" | "2y" | "5y";
+export type MarketPeriod = "1d" | "5d" | "1mo" | "3mo" | "6mo" | "1y" | "2y" | "5y";
 export type MarketInterval = "1d" | "1wk" | "1mo";
 export type MarketUnit = "currency" | "points";
 
@@ -37,6 +37,7 @@ export type MarketHistory = {
 };
 
 export const MARKET_PERIODS: ReadonlyArray<{ value: MarketPeriod; label: string }> = [
+  { value: "1d", label: "1 dia" },
   { value: "5d", label: "5 dias" },
   { value: "1mo", label: "1 mês" },
   { value: "3mo", label: "3 meses" },
@@ -53,7 +54,7 @@ export const MARKET_INTERVALS: ReadonlyArray<{ value: MarketInterval; label: str
 ];
 
 export function intervalosPermitidos(period: MarketPeriod): MarketInterval[] {
-  if (period === "5d") return ["1d"];
+  if (period === "1d" || period === "5d") return ["1d"];
   if (period === "1mo") return ["1d", "1wk"];
   return ["1d", "1wk", "1mo"];
 }

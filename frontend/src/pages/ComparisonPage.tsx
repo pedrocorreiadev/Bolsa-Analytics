@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from "react";
 import { Icon } from "../components/Icon";
+import AssetIcon from "../components/AssetIcon";
 import MarketChart from "../components/MarketChart";
 import PriceComparisonChart from "../components/PriceComparisonChart";
 import { useMarketAssets } from "../hooks/useMarketAssets";
@@ -141,7 +142,7 @@ export default function ComparisonPage() {
               { history: alignedSecond, summary: comparison.secondSummary, asset: secondAsset, order: "second" },
             ].map(({ history, summary, asset, order }) => (
               <section key={order} className={`panel comparison-quote comparison-quote-${order}`} aria-label={`Resumo de ${history.ticker}`}>
-                <div className="comparison-quote-name"><span className="comparison-series-mark" aria-hidden="true" /><h3 className="mono">{history.ticker}</h3><span>{asset?.name}</span><span className="comparison-unit mono">{history.unit === "points" ? "PONTOS" : history.currency}</span></div>
+                <div className="comparison-quote-name">{asset && <AssetIcon asset={asset} size="small" />}<span className="comparison-series-mark" aria-hidden="true" /><h3 className="mono">{history.ticker}</h3><span>{asset?.name}</span><span className="comparison-unit mono">{history.unit === "points" ? "PONTOS" : history.currency}</span></div>
                 <div className="comparison-quote-value"><strong className="mono">{comparisonValue(summary.latest, history)}</strong><span className={`mono ${comparisonChangeClass(summary.changePercent)}`}>{comparisonPercent(summary.changePercent)}</span></div>
                 <p>Último fechamento comum · variação desde {comparisonDate(comparison.start)}</p>
               </section>

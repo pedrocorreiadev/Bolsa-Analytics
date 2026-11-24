@@ -1,5 +1,30 @@
 # Recursos de terceiros
 
+## Identidade visual dos ativos
+
+Os arquivos em `frontend/public/asset-icons/` identificam os ativos do catálogo.
+As marcas mantêm suas cores originais e pertencem aos respectivos titulares.
+
+- Petrobras: ícone do [site oficial](https://petrobras.com.br/quem-somos/nossa-marca),
+  arquivo `https://petrobras.com.br/o/tema-site-externo-petrobras/images/favicon.ico`.
+- Vale: símbolo do [site oficial](https://vale.com/pt), arquivo
+  `https://vale.com/documents/44618/57981/fav_128px/550e3a42-f32c-7356-de52-41320d095395`.
+- Ibovespa: identificado pela marca da [B3](https://www.b3.com.br/pt_br/), bolsa
+  responsável pelo índice; não é apresentado como um logotipo exclusivo do Ibovespa.
+  Arquivo `https://www.b3.com.br/documents/20126/35724/favicon/9de43049-c725-809d-a264-5a0a56599e6b`.
+- Bitcoin: símbolo publicado no [Bitcoin.org](https://bitcoin.org/), arquivo
+  `https://bitcoin.org/img/icons/logo_ios.png`.
+- Câmbio: bandeiras de EUA, União Europeia, Reino Unido e Japão, com a bandeira
+  brasileira indicando a moeda de cotação. Arquivos do projeto
+  [flag-icons](https://github.com/lipis/flag-icons), licença MIT, Copyright (c)
+  2013 Panayiotis Lipiridis. A licença completa está em
+  `frontend/public/licenses/flag-icons-LICENSE`.
+- Ouro futuro: pictograma local de barras de ouro em `AssetIcon.tsx`.
+
+As imagens são distribuídas junto ao frontend, sem consultas a serviços de
+logos ou bandeiras durante o uso da aplicação. O uso é de identificação do
+ativo; não indica parceria ou endosso das organizações representadas.
+
 ## Phosphor Icons
 
 Os ícones locais em `frontend/src/assets/icons/` e os desenhos correspondentes
